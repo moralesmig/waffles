@@ -23,7 +23,7 @@ function IncomeItem({ income }) {
             </h2>
             <div>
               <h2 className="font-bold">{income.name}</h2>
-              <h2 className="text-sm text-gray-500">{income.totalItem} Item</h2>
+              {/* <h2 className="text-sm text-gray-500">{income.totalItem} Item</h2> */}
             </div>
           </div>
           <h2 className="font-bold text-primary text-lg"> ${income.amount}</h2>
