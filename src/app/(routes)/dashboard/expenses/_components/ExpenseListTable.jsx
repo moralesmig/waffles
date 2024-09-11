@@ -1,11 +1,29 @@
 import { db } from "@/../utils/dbConfig";
 import { Expenses } from "@/../utils/schema";
 import { eq } from "drizzle-orm";
-import { Trash } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
+import { Button } from "@/./components/ui/button";
 import { toast } from "sonner";
+import { Trash } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/./components/ui/alert-dialog";
 
 function ExpenseListTable({ expensesList, refreshData }) {
+  const [showAlert, setShowAlert] = useState(false);
+
+  const handleButtonClick = () => {
+    setShowAlert(true);
+  };
+
   const deleteExpense = async (expense) => {
     const result = await db
       .delete(Expenses)
@@ -16,7 +34,10 @@ function ExpenseListTable({ expensesList, refreshData }) {
       toast("Expense Deleted!");
       refreshData();
     }
+
+    setShowAlert(false);
   };
+
   return (
     <div className="mt-3">
       <div className="grid grid-cols-4 rounded-tl-xl rounded-tr-xl bg-slate-200 p-2 mt-3">
@@ -31,16 +52,42 @@ function ExpenseListTable({ expensesList, refreshData }) {
           <h2>${expenses.amount}</h2>
           <h2>{expenses.createdAt}</h2>
           <h2>
-            <Trash
-              className="text-red-500 cursor-pointer ml-5"
-              onClick={() => deleteExpense(expenses)}
-            />
-          </h2>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Trash
+                  className="text-red-500 cursor-pointer ml-5"
+                  onClick={handleButtonClick}
+                />
+              </AlertDialogTrigger>
 
+              <div>
+                {showAlert && (
+                  <div>
+                    {
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => deleteExpense(expenses)}>
+                            Continue
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    }
+                  </div>
+                )}
+              </div>
+            </AlertDialog>
+          </h2>
         </div>
       ))}
     </div>
-  );
-}
+  )
+};
 
 export default ExpenseListTable;
