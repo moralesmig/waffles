@@ -11,8 +11,8 @@ function Hero() {
                         <>
                             <h1 className="text-4xl font-semibold text-black dark:text-white">
                                 Manage your Money <br />
-                                <span className="text-4xl md:text-[6rem] text-blue-800 font-bold mt-1 leading-none">
-                                    2024 Budget
+                                <span className="text-2xl md:text-[6rem] text-blue-800 mt-1 leading-none">
+                                    Make Every Penny Count
                                 </span>
                             </h1>
                         </>

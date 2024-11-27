@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect } from "react";
 import SideNav from "./_components/SideNav";
-import DashboardHeader from "./_components/DashboardHeader";
+import DashboardNavigation from "./_components/DashboardNavigation";
 import { db } from "@/../utils/dbConfig";
 import { Budgets } from "@/../utils/schema";
 import { useUser } from "@clerk/nextjs";
@@ -21,7 +21,7 @@ function DashboardLayout({ children }) {
             .select()
             .from(Budgets)
             .where(eq(Budgets.createdBy, user?.primaryEmailAddress?.emailAddress));
-        console.log(result);
+
         if (result?.length == 0) {
             router.replace("/dashboard/budgets");
         }
@@ -32,10 +32,10 @@ function DashboardLayout({ children }) {
                 <SideNav />
             </div>
             <div className="md:hidden">
-                <MobileNavBar />
+                {/* <MobileNavBar /> */}
             </div>
             <div className="md:ml-64 ">
-                <DashboardHeader />
+                <DashboardNavigation />
                 {children}
             </div>
         </div>

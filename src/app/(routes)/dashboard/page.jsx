@@ -53,6 +53,7 @@ function Dashboard() {
                     ),
                 })
                 .from(Incomes)
+                .where(eq(Incomes.createdBy, user?.primaryEmailAddress.emailAddress))
                 .groupBy(Incomes.id); // Assuming you want to group by ID or any other relevant column
 
             setIncomeList(result);
@@ -81,13 +82,13 @@ function Dashboard() {
 
     return (
         <div className="p-8 bg-">
-            <h2 className="font-bold text-4xl">Hi, {user?.firstName} 👋</h2>
-            <p className="text-gray-500 mt-3">
+            {/* <h2 className="font-bold text-4xl">Hi, {user?.firstName} 👋</h2> */}
+            <p className="text-gray-500">
                 Here's what's happenning with your money. Lets manage your expenses.
             </p>
 
             <CardInfo budgetList={budgetList} incomeList={incomeList} />
-            <div className="grid grid-cols-1 lg:grid-cols-3 mt-6 gap-5">
+            {/* <div className="grid grid-cols-1 lg:grid-cols-3 mt-6 gap-5">
                 <div className="lg:col-span-2">
                     <BarChartDashboard budgetList={budgetList} />
                 </div>
@@ -98,13 +99,13 @@ function Dashboard() {
                             <BudgetItem budget={budget} key={index} />
                         ))
                         : [1, 2, 3, 4].map((item, index) => (
-                            <div
+                            <div key={index}
                                 className="h-[180xp] w-full
                  bg-slate-200 rounded-lg animate-pulse"
                             ></div>
                         ))}
                 </div>
-            </div>
+            </div> */}
         </div>
     );
 }

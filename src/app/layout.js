@@ -6,7 +6,7 @@ import { Toaster } from "@/./components/ui/sonner";
 const outfit = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Waffles",
+  title: "Pennywise",
   description: "Track your expenses",
 };
 

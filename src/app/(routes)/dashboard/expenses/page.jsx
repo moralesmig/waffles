@@ -5,7 +5,6 @@ import { desc, eq } from 'drizzle-orm';
 import React, { useEffect, useState } from 'react'
 import ExpenseListTable from './_components/ExpenseListTable';
 import { useUser } from '@clerk/nextjs';
-import { ArrowLeft } from 'lucide-react';
 import { useRouter } from "next/navigation";
 
 function ExpensesScreen() {
@@ -35,9 +34,11 @@ function ExpensesScreen() {
   return (
     <div className='p-10'>
       <div className='flex'>
-        <ArrowLeft onClick={() => route.replace('/dashboard')} className="cursor-pointer mt-2 mr-2" />
         <h2 className='font-bold text-3xl'>My Expenses</h2>
+        <div className="ml-10 mt-2 pl-8">
+        </div>
       </div>
+
       <ExpenseListTable refreshData={() => getAllExpenses()}
         expensesList={expensesList}
       />

@@ -31,6 +31,7 @@ function CreateIncomes({ refreshData }) {
    * Used to Create New Budget
    */
   const onCreateIncomes = async () => {
+
     const result = await db
       .insert(Incomes)
       .values({
@@ -51,7 +52,7 @@ function CreateIncomes({ refreshData }) {
       <Dialog>
         <DialogTrigger asChild>
           <div
-            className="bg-slate-100 p-10 rounded-2xl
+            className="bg-slate-100 p-5 rounded-2xl
             items-center flex flex-col border-2 border-dashed
             cursor-pointer hover:shadow-md"
           >

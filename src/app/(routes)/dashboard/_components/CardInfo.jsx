@@ -41,7 +41,6 @@ function CardInfo({ budgetList, incomeList }) {
     }, [totalBudget, totalIncome, totalSpend]);
 
     const CalculateCardInfo = () => {
-        console.log(budgetList);
         let currentBalance_ = 0;
         let totalBudget_ = 0;
         let totalSpend_ = 0;

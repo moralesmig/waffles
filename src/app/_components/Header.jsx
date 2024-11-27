@@ -12,7 +12,7 @@ function Header() {
         <div className="p-5 flex justify-between items-center border shadow-sm">
             <div className="flex flex-row items-center">
                 <Image src={"/logo.png"} alt="logo" width={40} height={25} />
-                <span className="ml-2 font-bold text-xl">Waffles</span>
+                <span className="ml-2 font-bold text-xl">Pennywise</span>
             </div>
 
             {isSignedIn ?

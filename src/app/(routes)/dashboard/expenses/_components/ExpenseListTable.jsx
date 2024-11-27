@@ -43,19 +43,21 @@ function ExpenseListTable({ expensesList, refreshData }) {
       <div className="grid grid-cols-4 rounded-tl-xl rounded-tr-xl bg-slate-200 p-2 mt-3">
         <h2 className="font-bold">Name</h2>
         <h2 className="font-bold">Amount</h2>
-        <h2 className="font-bold">Date</h2>
-        <h2 className="font-bold">Action</h2>
+        <h2 className="font-bold ml-5">Date</h2>
+        <h2 className="font-bold ml-5">Delete</h2>
       </div>
       {expensesList.map((expenses, index) => (
-        <div className="grid grid-cols-4 bg-slate-50 rounded-bl-xl rounded-br-xl p-2">
+        <div key={index} className="grid grid-cols-4 bg-slate-50 rounded-bl-xl rounded-br-xl p-2">
           <h2>{expenses.name}</h2>
           <h2>${expenses.amount}</h2>
-          <h2>{expenses.createdAt}</h2>
+          <h2>{expenses.createdAt}
+
+          </h2>
           <h2>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Trash
-                  className="text-red-500 cursor-pointer ml-5"
+                  className="text-red-500 cursor-pointer ml-10"
                   onClick={handleButtonClick}
                 />
               </AlertDialogTrigger>
