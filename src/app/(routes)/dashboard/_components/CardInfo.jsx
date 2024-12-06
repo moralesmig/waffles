@@ -80,8 +80,8 @@ function CardInfo({ budgetList, incomeList }) {
     return (
         <div>
             {/* Date Filter Inputs */}
-            <p className="font-bold mt-10">Filter by date</p>
-            <div className="flex flex-col-2 items-center gap-2 mb-7 mt-2">
+            <p className="font-bold pt-5">Filter by date</p>
+            <div className="flex flex-col-2 items-center gap-2 pb-7 pt-2">
                 <div className="">
                     <label className="block text-sm font-medium">Start Date</label>
                     <input
