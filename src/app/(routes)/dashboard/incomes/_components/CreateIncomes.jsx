@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogClose,
@@ -19,17 +19,29 @@ import { useUser } from "@clerk/nextjs";
 import { toast } from "sonner";
 
 function CreateIncomes({ refreshData }) {
-  const [emojiIcon, setEmojiIcon] = useState("😀");
+  const [emojiIcon, setEmojiIcon] = useState("💵");
   const [openEmojiPicker, setOpenEmojiPicker] = useState(false);
-
   const [name, setName] = useState();
   const [amount, setAmount] = useState();
-
+  const [datePaid, setDate] = useState();
   const { user } = useUser();
 
-  /**
-   * Used to Create New Budget
-   */
+  // Default today's date
+  useEffect(() => {
+    const getCentralTimeDate = () => {
+      const now = new Date();
+      const centralTime = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Chicago",
+        dateStyle: "short",
+      }).format(now);
+
+      return centralTime.replace(/\//g, "-"); // Ensures `YYYY-MM-DD` format for input date compatibility
+    };
+
+    setDate(getCentralTimeDate());
+  }, []);
+
+  // Used to Create New Budget
   const onCreateIncomes = async () => {
 
     const result = await db
@@ -37,6 +49,7 @@ function CreateIncomes({ refreshData }) {
       .values({
         name: name,
         amount: amount,
+        datePaid: datePaid,
         icon: emojiIcon,
         createdBy: user?.primaryEmailAddress?.emailAddress,
       })
@@ -52,7 +65,7 @@ function CreateIncomes({ refreshData }) {
       <Dialog>
         <DialogTrigger asChild>
           <div
-            className="bg-slate-100 p-5 rounded-2xl
+            className="bg-slate-100 p-3 rounded-2xl
             items-center flex flex-col border-2 border-dashed
             cursor-pointer hover:shadow-md"
           >
@@ -82,18 +95,26 @@ function CreateIncomes({ refreshData }) {
                   />
                 </div>
                 <div className="mt-2">
-                  <h2 className="text-black font-medium my-1">Source Name</h2>
+                  <h2 className="text-black font-medium my-1">Name</h2>
                   <Input
-                    placeholder="e.g. Youtube"
+                    placeholder="Description"
                     onChange={(e) => setName(e.target.value)}
                   />
                 </div>
                 <div className="mt-2">
-                  <h2 className="text-black font-medium my-1">Montly Amount</h2>
+                  <h2 className="text-black font-medium my-1">Amount</h2>
                   <Input
                     type="number"
-                    placeholder="e.g. 5000$"
+                    placeholder="$0"
                     onChange={(e) => setAmount(e.target.value)}
+                  />
+                </div>
+                <div className="mt-2">
+                  <h2 className="text-black font-medium my-1">Pay Date</h2>
+                  <Input
+                    type="date"
+                    value={datePaid}
+                    onChange={(e) => setDate(e.target.value)}
                   />
                 </div>
               </div>

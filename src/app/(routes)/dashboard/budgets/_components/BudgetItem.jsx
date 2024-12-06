@@ -2,6 +2,13 @@ import Link from "next/link";
 import React from "react";
 
 function BudgetItem({ budget }) {
+
+    // Check if budget?.dueDate is available and format it to MM/DD/YYYY
+    const dueDateAvailable = budget?.dueDate
+        ? "Due Date: " + budget.dueDate
+        : "No due date";
+
+
     const calculateProgressPerc = () => {
         const perc = (budget.totalSpend / budget.amount) * 100;
         return perc > 100 ? 100 : perc.toFixed(2);
@@ -23,7 +30,7 @@ function BudgetItem({ budget }) {
                         </h2>
                         <div>
                             <h2 className="font-bold">{budget.name}</h2>
-                            <h2 className="text-sm text-gray-500">{budget.totalItem} Item</h2>
+                            <p className="text-sm text-slate-400">{dueDateAvailable}</p>
                         </div>
                     </div>
                     <h2 className="font-bold text-primary text-lg"> ${budget.amount}</h2>

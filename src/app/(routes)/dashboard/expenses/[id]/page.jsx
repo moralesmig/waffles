@@ -5,7 +5,6 @@ import { useUser } from "@clerk/nextjs";
 import { desc, eq, getTableColumns, sql } from "drizzle-orm";
 import React, { useEffect, useState } from "react";
 import BudgetItem from "../../budgets/_components/BudgetItem";
-import AddExpense from "../_components/AddExpense";
 import ExpenseListTable from "../_components/ExpenseListTable";
 import { Button } from "@/./components/ui/button";
 import { ArrowLeft, Pen, PenBox, Trash } from "lucide-react";
@@ -29,6 +28,7 @@ function ExpensesScreen({ params }) {
   const [budgetInfo, setbudgetInfo] = useState();
   const [expensesList, setExpensesList] = useState([]);
   const route = useRouter();
+
   useEffect(() => {
     user && getBudgetInfo();
   }, [user]);
@@ -89,7 +89,7 @@ function ExpensesScreen({ params }) {
       <h2 className="text-2xl font-bold gap-2 flex justify-between items-center">
         <span className="flex gap-2 items-center">
           <ArrowLeft onClick={() => route.back()} className="cursor-pointer" />
-          My Expenses
+          Edit Budget
         </span>
         <div className="flex gap-2 items-center">
           <EditBudget
@@ -134,13 +134,10 @@ function ExpensesScreen({ params }) {
             rounded-lg animate-pulse"
           ></div>
         )}
-        <AddExpense
-          budgetId={params.id}
-          user={user}
-          refreshData={() => getBudgetInfo()}
-        />
+
       </div>
       <div className="mt-4">
+        <h2 className="text-2xl font-bold gap-2 flex justify-between items-center">Expenses</h2>
         <ExpenseListTable
           expensesList={expensesList}
           refreshData={() => getBudgetInfo()}

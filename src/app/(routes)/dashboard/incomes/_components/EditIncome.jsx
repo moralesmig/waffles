@@ -25,6 +25,7 @@ function EditIncome({ incomeInfo, refreshData }) {
 
     const [name, setName] = useState();
     const [amount, setAmount] = useState();
+    const [datePaid, setDate] = useState();
 
     const { user } = useUser();
 
@@ -33,6 +34,7 @@ function EditIncome({ incomeInfo, refreshData }) {
             setEmojiIcon(incomeInfo?.icon);
             setAmount(incomeInfo.amount);
             setName(incomeInfo.name);
+            setDate(incomeInfo.datePaid);
         }
     }, [incomeInfo]);
     const onUpdateIncome = async () => {
@@ -41,6 +43,7 @@ function EditIncome({ incomeInfo, refreshData }) {
             .set({
                 name: name,
                 amount: amount,
+                datePaid: datePaid,
                 icon: emojiIcon,
             })
             .where(eq(Incomes.id, incomeInfo.id))
@@ -53,67 +56,56 @@ function EditIncome({ incomeInfo, refreshData }) {
     };
     return (
         <div>
-            <Dialog>
-                <DialogTrigger asChild>
-                    <Button className="flex space-x-2 gap-2 rounded-full">
-                        {" "}
-                        <PenBox className="w-4" /> Edit
-                    </Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Update Income</DialogTitle>
-                        <DialogDescription>
-                            <div className="mt-5">
-                                <Button
-                                    variant="outline"
-                                    className="text-lg"
-                                    onClick={() => setOpenEmojiPicker(!openEmojiPicker)}
-                                >
-                                    {emojiIcon}
-                                </Button>
-                                <div className="absolute z-20">
-                                    <EmojiPicker
-                                        open={openEmojiPicker}
-                                        onEmojiClick={(e) => {
-                                            setEmojiIcon(e.emoji);
-                                            setOpenEmojiPicker(false);
-                                        }}
-                                    />
-                                </div>
-                                <div className="mt-2">
-                                    <h2 className="text-black font-medium my-1">Income Name</h2>
-                                    <Input
-                                        placeholder="e.g. Home Decor"
-                                        defaultValue={incomeInfo?.name}
-                                        onChange={(e) => setName(e.target.value)}
-                                    />
-                                </div>
-                                <div className="mt-2">
-                                    <h2 className="text-black font-medium my-1">Income Amount</h2>
-                                    <Input
-                                        type="number"
-                                        defaultValue={incomeInfo?.amount}
-                                        placeholder="e.g. 5000$"
-                                        onChange={(e) => setAmount(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter className="sm:justify-start">
-                        <DialogClose asChild>
-                            <Button
-                                disabled={!(name && amount)}
-                                onClick={() => onUpdateIncome()}
-                                className="mt-5 w-full rounded-full"
-                            >
-                                Update Income
-                            </Button>
-                        </DialogClose>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <div className="mt-5">
+                <Button
+                    variant="outline"
+                    className="text-lg"
+                    onClick={() => setOpenEmojiPicker(!openEmojiPicker)}
+                >
+                    {emojiIcon}
+                </Button>
+                <div className="absolute z-20">
+                    <EmojiPicker
+                        open={openEmojiPicker}
+                        onEmojiClick={(e) => {
+                            setEmojiIcon(e.emoji);
+                            setOpenEmojiPicker(false);
+                        }}
+                    />
+                </div>
+                <div className="mt-2">
+                    <h2 className="text-black font-medium my-1">Name</h2>
+                    <Input
+                        placeholder="e.g. Home Decor"
+                        defaultValue={incomeInfo?.name}
+                        onChange={(e) => setName(e.target.value)}
+                    />
+                </div>
+                <div className="mt-2">
+                    <h2 className="text-black font-medium my-1">Amount</h2>
+                    <Input
+                        type="number"
+                        defaultValue={incomeInfo?.amount}
+                        placeholder="e.g. $5000"
+                        onChange={(e) => setAmount(e.target.value)}
+                    />
+                </div>
+                <div className="mt-2">
+                    <h2 className="text-black font-medium my-1">Pay Date</h2>
+                    <Input
+                        type="date"
+                        defaultValue={incomeInfo?.datePaid}
+                        onChange={(e) => setAmount(e.target.value)}
+                    />
+                </div>
+            </div>
+            <Button
+                disabled={!(name && amount)}
+                onClick={() => onUpdateIncome()}
+                className="mt-5 w-full rounded-full"
+            >
+                Update Income
+            </Button>
         </div>
     );
 }

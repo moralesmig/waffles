@@ -67,15 +67,12 @@ function IncomeScreen({ params }) {
   return (
     <div className="p-10">
       <h2 className="text-2xl font-bold gap-2 flex justify-between items-center">
+        <ArrowLeft onClick={() => route.replace('/dashboard/incomes')} className="cursor-pointer mt-1" />
         <span className="flex gap-2 items-center">
-          <ArrowLeft onClick={() => route.back()} className="cursor-pointer" />
-          My Income
+          <p>Edit Income</p>
         </span>
         <div className="flex gap-2 items-center">
-          <EditIncome
-            incomeInfo={incomeInfo}
-            refreshData={() => getIncomeInfo()}
-          />
+
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -100,19 +97,10 @@ function IncomeScreen({ params }) {
           </AlertDialog>
         </div>
       </h2>
-      <div
-        className="grid grid-cols-1 
-        md:grid-cols-2 mt-6 gap-5"
-      >
-        {incomeInfo ? (
-          <IncomeItem income={incomeInfo} />
-        ) : (
-          <div
-            className="h-[150px] w-full bg-slate-200 
-            rounded-lg animate-pulse"
-          ></div>
-        )}
 
+
+      <div className="grid grid-cols-1 md:grid-cols-2 mt-6 gap-5">
+        <EditIncome incomeInfo={incomeInfo} refreshData={() => getIncomeInfo()} />
       </div>
 
     </div>

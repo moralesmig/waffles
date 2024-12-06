@@ -22,10 +22,9 @@ import { toast } from "sonner";
 function EditBudget({ budgetInfo, refreshData }) {
   const [emojiIcon, setEmojiIcon] = useState(budgetInfo?.icon);
   const [openEmojiPicker, setOpenEmojiPicker] = useState(false);
-
+  const [dueDate, setDate] = useState();
   const [name, setName] = useState();
   const [amount, setAmount] = useState();
-
   const { user } = useUser();
 
   useEffect(() => {
@@ -33,6 +32,7 @@ function EditBudget({ budgetInfo, refreshData }) {
       setEmojiIcon(budgetInfo?.icon);
       setAmount(budgetInfo.amount);
       setName(budgetInfo.name);
+      setDate(budgetInfo.dueDate);
     }
   }, [budgetInfo]);
   const onUpdateBudget = async () => {
@@ -41,6 +41,7 @@ function EditBudget({ budgetInfo, refreshData }) {
       .set({
         name: name,
         amount: amount,
+        dueDate: dueDate,
         icon: emojiIcon,
       })
       .where(eq(Budgets.id, budgetInfo.id))
@@ -82,20 +83,28 @@ function EditBudget({ budgetInfo, refreshData }) {
                   />
                 </div>
                 <div className="mt-2">
-                  <h2 className="text-black font-medium my-1">Budget Name</h2>
+                  <h2 className="text-black font-medium my-1 text-left pl-2">Name</h2>
                   <Input
-                    placeholder="e.g. Home Decor"
+                    placeholder="Description"
                     defaultValue={budgetInfo?.name}
                     onChange={(e) => setName(e.target.value)}
                   />
                 </div>
-                <div className="mt-2">
-                  <h2 className="text-black font-medium my-1">Budget Amount</h2>
+                <div className="mt-5">
+                  <h2 className="text-black font-medium my-1 text-left pl-2">Amount</h2>
                   <Input
                     type="number"
                     defaultValue={budgetInfo?.amount}
-                    placeholder="e.g. 5000$"
+                    placeholder="$0"
                     onChange={(e) => setAmount(e.target.value)}
+                  />
+                </div>
+                <div className="mt-5">
+                  <h2 className="text-black font-medium my-1 text-left pl-2">Due Date (optional)</h2>
+                  <Input
+                    type="date"
+                    defaultValue={budgetInfo?.dueDate}
+                    onChange={(e) => setDate(e.target.value)}
                   />
                 </div>
               </div>

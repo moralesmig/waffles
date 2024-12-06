@@ -19,8 +19,9 @@ function Dashboard() {
     useEffect(() => {
         user && getBudgetList();
     }, [user]);
+
     /**
-     * used to get budget List
+    * Get Budget List
      */
     const getBudgetList = async () => {
         const result = await db
@@ -41,7 +42,7 @@ function Dashboard() {
     };
 
     /**
-     * Get Income stream list
+     * Get Income lLst
      */
     const getIncomeList = async () => {
         try {
@@ -63,7 +64,7 @@ function Dashboard() {
     };
 
     /**
-     * Used to get All expenses belong to users
+     * Get All Expenses
      */
     const getAllExpenses = async () => {
         const result = await db

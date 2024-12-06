@@ -19,17 +19,36 @@ import { useUser } from "@clerk/nextjs";
 import { toast } from "sonner";
 
 function CreateBudget({ refreshData }) {
-    const [emojiIcon, setEmojiIcon] = useState("😀");
+    const [emojiIcon, setEmojiIcon] = useState("💰");
     const [openEmojiPicker, setOpenEmojiPicker] = useState(false);
-
     const [name, setName] = useState();
     const [amount, setAmount] = useState();
-
+    const [dueDate, setDate] = useState("");
     const { user } = useUser();
 
-    /**
-     * Used to Create New Budget
-     */
+    // Adjust and format the date for Central Time
+    const formatDateToCentralTime = (dateString) => {
+        if (!dateString) return null;
+
+        // Parse the date as UTC
+        const date = new Date(dateString + "T00:00:00Z");
+
+        // Adjust the date to Central Time Zone (America/Chicago)
+        const offset = -6; // Central Time Zone offset in hours (Note: consider Daylight Saving Time, if applicable)
+        date.setHours(date.getHours() + offset);
+
+        // Return the date formatted as YYYY-MM-DD
+        return date.toISOString().split('T')[0]; // Keeps only the date part
+    };
+
+    // Handle date change and format the date before saving
+    const handleDateChange = (e) => {
+        const selectedDate = e.target.value; // the raw date string from the input
+        const formattedDate = formatDateToCentralTime(selectedDate); // format it to Central Time
+        setDate(formattedDate); // set the formatted date to state
+    };
+
+    // Create New Budget
     const onCreateBudget = async () => {
         const result = await db
             .insert(Budgets)
@@ -37,6 +56,7 @@ function CreateBudget({ refreshData }) {
                 name: name,
                 amount: amount,
                 createdBy: user?.primaryEmailAddress?.emailAddress,
+                dueDate: dueDate,
                 icon: emojiIcon,
             })
             .returning({ insertedId: Budgets.id });
@@ -51,7 +71,7 @@ function CreateBudget({ refreshData }) {
             <Dialog>
                 <DialogTrigger asChild>
                     <div
-                        className="bg-slate-100 p-5 rounded-2xl
+                        className="bg-slate-100 p-3 rounded-2xl
             items-center flex flex-col border-2 border-dashed
             cursor-pointer hover:shadow-md"
                     >
@@ -81,18 +101,26 @@ function CreateBudget({ refreshData }) {
                                     />
                                 </div>
                                 <div className="mt-2">
-                                    <h2 className="text-black font-medium my-1">Budget Name</h2>
+                                    <h2 className="text-black font-medium my-1 text-left pl-2">Name</h2>
                                     <Input
-                                        placeholder="e.g. Home Decor"
+                                        type="text"
+                                        placeholder="Description"
                                         onChange={(e) => setName(e.target.value)}
                                     />
                                 </div>
-                                <div className="mt-2">
-                                    <h2 className="text-black font-medium my-1">Budget Amount</h2>
+                                <div className="mt-5">
+                                    <h2 className="text-black font-medium my-1 text-left pl-2">Amount</h2>
                                     <Input
                                         type="number"
-                                        placeholder="e.g. 5000$"
+                                        placeholder="$0"
                                         onChange={(e) => setAmount(e.target.value)}
+                                    />
+                                </div>
+                                <div className="mt-5">
+                                    <h2 className="text-black font-medium my-1 text-left pl-2">Due Date (optional)</h2>
+                                    <Input
+                                        type="date"
+                                        onChange={handleDateChange}
                                     />
                                 </div>
                             </div>

@@ -21,6 +21,7 @@ export const Incomes = pgTable("incomes", {
     amount: varchar("amount").notNull(),
     icon: varchar("icon"),
     createdBy: varchar("createdBy").notNull(),
+    datePaid: varchar("datePaid"),
 });
 export const Expenses = pgTable("expenses", {
     id: serial("id").primaryKey(),

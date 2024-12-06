@@ -19,6 +19,8 @@ import {
 
 function ExpenseListTable({ expensesList, refreshData }) {
   const [showAlert, setShowAlert] = useState(false);
+  const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
+
 
   const handleButtonClick = () => {
     setShowAlert(true);
@@ -38,15 +40,41 @@ function ExpenseListTable({ expensesList, refreshData }) {
     setShowAlert(false);
   };
 
+  const handleSort = (column) => {
+    let direction = 'asc';
+    if (sortConfig.key === column && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key: column, direction });
+  };
+
+  const sortedExpenses = [...expensesList].sort((a, b) => {
+    const { key, direction } = sortConfig;
+    if (direction === 'asc') {
+      if (key === 'amount') {
+        return a[key] - b[key]; // For numeric sorting (Amount)
+      }
+      return a[key].localeCompare(b[key]); // For string sorting (Name, Date)
+    } else {
+      if (key === 'amount') {
+        return b[key] - a[key];
+      }
+      return b[key].localeCompare(a[key]);
+    }
+  });
+
+
+
+
   return (
     <div className="mt-3">
       <div className="grid grid-cols-4 rounded-tl-xl rounded-tr-xl bg-slate-200 p-2 mt-3">
-        <h2 className="font-bold">Name</h2>
-        <h2 className="font-bold">Amount</h2>
-        <h2 className="font-bold ml-5">Date</h2>
+        <h2 className="font-bold cursor-pointer" onClick={() => handleSort('name')}>Name</h2>
+        <h2 className="font-bold cursor-pointer" onClick={() => handleSort('amount')}>Amount</h2>
+        <h2 className="font-bold ml-5 cursor-pointer" onClick={() => handleSort('createdAt')}>Date</h2>
         <h2 className="font-bold ml-5">Delete</h2>
       </div>
-      {expensesList.map((expenses, index) => (
+      {sortedExpenses.map((expenses, index) => (
         <div key={index} className="grid grid-cols-4 bg-slate-50 rounded-bl-xl rounded-br-xl p-2">
           <h2>{expenses.name}</h2>
           <h2>${expenses.amount}</h2>

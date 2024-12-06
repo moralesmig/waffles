@@ -1,11 +1,19 @@
 import Link from "next/link";
 import React from "react";
+import { parseISO, format } from 'date-fns';
 
 function IncomeItem({ income }) {
+  // change date paid format
+  const parsedDate = parseISO(income?.datePaid);
+  const formattedDate = format(parsedDate, 'MMM d, yyyy');
+
+
   const calculateProgressPerc = () => {
     const perc = (income.totalSpend / income.amount) * 100;
     return perc > 100 ? 100 : perc.toFixed(2);
   };
+
+
   return (
     <Link href={"/dashboard/incomes/" + income?.id}>
       <div
@@ -23,7 +31,7 @@ function IncomeItem({ income }) {
             </h2>
             <div>
               <h2 className="font-bold">{income.name}</h2>
-              {/* <h2 className="text-sm text-gray-500">{income.totalItem} Item</h2> */}
+              <h2 className="text-sm text-gray-500">{formattedDate}</h2>
             </div>
           </div>
           <h2 className="font-bold text-primary text-lg"> ${income.amount}</h2>

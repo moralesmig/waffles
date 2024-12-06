@@ -10,7 +10,7 @@ function Income() {
   return (
     <div className="p-10">
       <div className="flex">
-        <h2 className="font-bold text-3xl">My Income Streams</h2>
+        <h2 className="font-bold text-3xl">My Income</h2>
       </div>
       <IncomeList />
     </div>
