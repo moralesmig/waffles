@@ -41,7 +41,7 @@ function CreateIncomes({ refreshData }) {
     setDate(getCentralTimeDate());
   }, []);
 
-  // Used to Create New Budget
+  // Create New Budget
   const onCreateIncomes = async () => {
 
     const result = await db
@@ -49,9 +49,9 @@ function CreateIncomes({ refreshData }) {
       .values({
         name: name,
         amount: amount,
-        datePaid: datePaid,
         icon: emojiIcon,
         createdBy: user?.primaryEmailAddress?.emailAddress,
+        datePaid: datePaid,
       })
       .returning({ insertedId: Incomes.id });
 

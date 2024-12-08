@@ -1,39 +1,25 @@
 "use client";
 import { Button } from "@/./components/ui/button";
-import { PenBox } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/./components/ui/dialog";
 import EmojiPicker from "emoji-picker-react";
-import { useUser } from "@clerk/nextjs";
 import { Input } from "@/./components/ui/input";
 import { db } from "@/../utils/dbConfig";
 import { Incomes } from "@/../utils/schema";
 import { eq } from "drizzle-orm";
 import { toast } from "sonner";
+
 function EditIncome({ incomeInfo, refreshData }) {
     const [emojiIcon, setEmojiIcon] = useState(incomeInfo?.icon);
     const [openEmojiPicker, setOpenEmojiPicker] = useState(false);
-
     const [name, setName] = useState();
     const [amount, setAmount] = useState();
     const [datePaid, setDate] = useState();
 
-    const { user } = useUser();
-
     useEffect(() => {
         if (incomeInfo) {
-            setEmojiIcon(incomeInfo?.icon);
-            setAmount(incomeInfo.amount);
             setName(incomeInfo.name);
+            setAmount(incomeInfo.amount);
+            setEmojiIcon(incomeInfo?.icon);
             setDate(incomeInfo.datePaid);
         }
     }, [incomeInfo]);
@@ -43,8 +29,8 @@ function EditIncome({ incomeInfo, refreshData }) {
             .set({
                 name: name,
                 amount: amount,
-                datePaid: datePaid,
                 icon: emojiIcon,
+                datePaid: datePaid,
             })
             .where(eq(Incomes.id, incomeInfo.id))
             .returning();
@@ -95,7 +81,7 @@ function EditIncome({ incomeInfo, refreshData }) {
                     <Input
                         type="date"
                         defaultValue={incomeInfo?.datePaid}
-                        onChange={(e) => setAmount(e.target.value)}
+                        onChange={(e) => setDate(e.target.value)}
                     />
                 </div>
             </div>
