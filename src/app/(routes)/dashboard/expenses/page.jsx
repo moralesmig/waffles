@@ -58,7 +58,7 @@ function ExpensesScreen({ params }) {
 
   }
   return (
-    <div className='p-10'>
+    <div className='p-10  pb-28'>
       <div className='flex'>
         <h2 className='font-bold text-3xl'>My Expenses</h2>
         <div className="ml-10 mt-2 pl-8">

@@ -1,28 +1,24 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { UserButton, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import CardInfo from "./_components/CardInfo";
 import { db } from "@/../utils/dbConfig";
 import { desc, eq, getTableColumns, sql } from "drizzle-orm";
 import { Budgets, Expenses, Incomes } from "@/../utils/schema";
-import BarChartDashboard from "./_components/BarChartDashboard";
-import BudgetItem from "./budgets/_components/BudgetItem";
-import ExpenseListTable from "./expenses/_components/ExpenseListTable";
+
 
 
 function Dashboard() {
     const { user } = useUser();
-
     const [budgetList, setBudgetList] = useState([]);
     const [incomeList, setIncomeList] = useState([]);
     const [expensesList, setExpensesList] = useState([]);
+
     useEffect(() => {
         user && getBudgetList();
     }, [user]);
 
-    /**
-    * Get Budget List
-     */
+    //Get Budget List
     const getBudgetList = async () => {
         const result = await db
             .select({
@@ -41,9 +37,7 @@ function Dashboard() {
         getIncomeList();
     };
 
-    /**
-     * Get Income lLst
-     */
+    // Get Income List
     const getIncomeList = async () => {
         try {
             const result = await db
@@ -63,9 +57,7 @@ function Dashboard() {
         }
     };
 
-    /**
-     * Get All Expenses
-     */
+    // Get All Expenses
     const getAllExpenses = async () => {
         const result = await db
             .select({
@@ -82,31 +74,13 @@ function Dashboard() {
     };
 
     return (
-        <div className="p-8">
+        <div className="p-8 pb-28">
             {/* <h2 className="font-bold text-4xl">Hi, {user?.firstName} 👋</h2> */}
             <p className="text-gray-500">
                 Here's what's happenning with your money. Lets manage your expenses.
             </p>
 
             <CardInfo budgetList={budgetList} incomeList={incomeList} />
-            {/* <div className="grid grid-cols-1 lg:grid-cols-3 mt-6 gap-5">
-                <div className="lg:col-span-2">
-                    <BarChartDashboard budgetList={budgetList} />
-                </div>
-                <div className="grid gap-5">
-                    <h2 className="font-bold text-lg">Latest Budgets</h2>
-                    {budgetList?.length > 0
-                        ? budgetList.map((budget, index) => (
-                            <BudgetItem budget={budget} key={index} />
-                        ))
-                        : [1, 2, 3, 4].map((item, index) => (
-                            <div key={index}
-                                className="h-[180xp] w-full
-                 bg-slate-200 rounded-lg animate-pulse"
-                            ></div>
-                        ))}
-                </div>
-            </div> */}
         </div>
     );
 }
