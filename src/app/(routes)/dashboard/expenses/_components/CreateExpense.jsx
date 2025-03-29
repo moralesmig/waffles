@@ -75,7 +75,7 @@ function CreateExpense({ refreshData }) {
                 name: name,
                 amount: amount,
                 budgetId: budgetId,
-                createdAt: moment().format("MM/DD/yyyy"),
+                createdAt: createdAt,
             })
             .returning({ insertedId: Budgets.id });
 

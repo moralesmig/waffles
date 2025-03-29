@@ -23,9 +23,11 @@ function CardInfo({ budgetList, incomeList }) {
         const currentDate = new Date();
         const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
         const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+        const lastDayOfTheYear = new Date(currentDate.getFullYear(), 11, 31);
+
 
         setStartDate(firstDay.toISOString().split("T")[0]); // Convert to YYYY-MM-DD format
-        setEndDate(lastDay.toISOString().split("T")[0]);
+        setEndDate(lastDayOfTheYear.toISOString().split("T")[0]);
     }, []);
 
     // Calculate card information on data or date change
@@ -79,7 +81,7 @@ function CardInfo({ budgetList, incomeList }) {
 
     return (
         <div>
-            {/* Date Filter Inputs */}
+            {/* Date Filter Inputs
             <p className="font-bold pt-5">Filter by date</p>
             <div className="flex flex-col-2 items-center gap-2 pb-7 pt-2">
                 <div className="">
@@ -101,6 +103,7 @@ function CardInfo({ budgetList, incomeList }) {
                     />
                 </div>
             </div>
+            */}
 
             {/* Cards Section */}
             {filteredBudgetList?.length > 0 || filteredIncomeList?.length > 0 ? (

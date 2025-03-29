@@ -1,39 +1,36 @@
 import Link from "next/link";
 import React from "react";
+import { parseISO, format, isValid } from "date-fns";
 
 function BudgetItem({ budget }) {
-
-    // Check if budget?.dueDate is available and format it to MM/DD/YYYY
-    const dueDateAvailable = budget?.dueDate
-        ? "Due Date: " + budget.dueDate
-        : "No due date";
-
+    // Format dueDate to MM/DD/YYYY
+    let formattedDueDate = "Due Date: N/A";
+    if (budget?.dueDate) {
+        const parsedDate = parseISO(budget.dueDate);
+        if (isValid(parsedDate)) {
+            formattedDueDate = "Due: " + format(parsedDate, "MM/dd/yyyy");
+        }
+    }
 
     const calculateProgressPerc = () => {
         const perc = (budget.totalSpend / budget.amount) * 100;
         return perc > 100 ? 100 : perc.toFixed(2);
     };
+
     return (
-        <Link href={"/dashboard/expenses/" + budget?.id}>
-            <div
-                className="p-5 border rounded-2xl
-    hover:shadow-md cursor-pointer h-[170px]"
-            >
+        <Link href={`/dashboard/budgets/${budget?.id}`}>
+            <div className="p-5 border rounded-2xl hover:shadow-md cursor-pointer h-[170px]">
                 <div className="flex gap-2 items-center justify-between">
                     <div className="flex gap-2 items-center">
-                        <h2
-                            className="text-2xl p-3 px-4
-              bg-slate-100 rounded-full 
-              "
-                        >
+                        <h2 className="text-2xl p-3 px-4 bg-slate-100 rounded-full">
                             {budget?.icon}
                         </h2>
                         <div>
                             <h2 className="font-bold">{budget.name}</h2>
-                            <p className="text-sm text-slate-400">{dueDateAvailable}</p>
+                            <p className="text-sm text-slate-400">{formattedDueDate}</p>
                         </div>
                     </div>
-                    <h2 className="font-bold text-primary text-lg"> ${budget.amount}</h2>
+                    <h2 className="font-bold text-primary text-lg">${budget.amount}</h2>
                 </div>
 
                 <div className="mt-5">
@@ -45,16 +42,10 @@ function BudgetItem({ budget }) {
                             ${budget.amount - budget.totalSpend} Remaining
                         </h2>
                     </div>
-                    <div
-                        className="w-full
-              bg-slate-300 h-2 rounded-full"
-                    >
+                    <div className="w-full bg-slate-300 h-2 rounded-full">
                         <div
-                            className="
-              bg-primary h-2 rounded-full"
-                            style={{
-                                width: `${calculateProgressPerc()}%`,
-                            }}
+                            className="bg-primary h-2 rounded-full"
+                            style={{ width: `${calculateProgressPerc()}%` }}
                         ></div>
                     </div>
                 </div>

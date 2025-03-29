@@ -1,6 +1,6 @@
 "use client";
 import { db } from "@/../utils/dbConfig";
-import { Expenses } from "@/../utils/schema";
+import { Budgets } from "@/../utils/schema";
 import { useUser } from "@clerk/nextjs";
 import { desc, eq, getTableColumns, sql } from "drizzle-orm";
 import React, { useEffect, useState } from "react";
@@ -19,57 +19,57 @@ import {
 } from "@/./components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import EditExpense from "../_components/EditExpense";
-import ExpenseItem from "../_components/ExpenseItem"
+import EditBudget from "../_components/EditBudget";
+import BudgetItem from "../_components/BudgetItem"
 
-function ExpenseScreen({ params }) {
+function BudgetScreen({ params }) {
   const { user } = useUser();
-  const [expenseInfo, setExpenseInfo] = useState();
-  const [ExpenseList, setExpenseList] = useState([]);
+  const [budgetInfo, setBudgetInfo] = useState();
+  const [BudgetList, setBudgetList] = useState([]);
   const route = useRouter();
   useEffect(() => {
-    user && getExpenseInfo();
+    user && getBudgetInfo();
   }, [user]);
 
   /**
-   * Get Expense Information
+   * Get Budget Information
    */
-  const getExpenseInfo = async () => {
+  const getBudgetInfo = async () => {
     const result = await db
       .select()
-      .from(Expenses)
-      .where(eq(Expenses.id, params.id))
-      .orderBy(desc(Expenses.id))
+      .from(Budgets)
+      .where(eq(Budgets.id, params.id))
+      .orderBy(desc(Budgets.id))
 
-    setExpenseInfo(result[0]);
+    setBudgetInfo(result[0]);
   };
 
   /**
- * Used to Delete Expense
+ * Used to Delete Budget
  */
-  const deleteExpense = async () => {
-    const deleteExpenseResult = await db
-      .delete(Expenses)
-      .where(eq(Expenses.id, params.id))
+  const deleteBudget = async () => {
+    const deleteBudgetResult = await db
+      .delete(Budgets)
+      .where(eq(Budgets.id, params.id))
       .returning();
 
-    if (deleteExpenseResult) {
+    if (deleteBudgetResult) {
       const result = await db
-        .delete(Expenses)
-        .where(eq(Expenses.id, params.id))
+        .delete(Budgets)
+        .where(eq(Budgets.id, params.id))
         .returning();
     }
-    toast("Expense Deleted!");
-    route.replace("/dashboard/expenses");
+    toast("Budget Deleted!");
+    route.replace("/dashboard/budgets");
   };
 
 
   return (
     <div className="p-10">
       <h2 className="text-2xl font-bold gap-2 flex justify-between items-center">
-        <ArrowLeft onClick={() => route.replace('/dashboard/expenses')} className="cursor-pointer mt-1" />
+        <ArrowLeft onClick={() => route.replace('/dashboard/budgets')} className="cursor-pointer mt-1" />
         <span className="flex gap-2 items-center">
-          <p>Edit Expense</p>
+          <p>Edit Budget</p>
         </span>
         <div className="flex gap-2 items-center">
 
@@ -84,12 +84,12 @@ function ExpenseScreen({ params }) {
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action cannot be undone and will permanenly delete the selected expense.
+                  This action cannot be undone and will permanenly delete the selected budget.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => deleteExpense()}>
+                <AlertDialogAction onClick={() => deleteBudget()}>
                   Continue
                 </AlertDialogAction>
               </AlertDialogFooter>
@@ -100,11 +100,11 @@ function ExpenseScreen({ params }) {
 
 
       <div className="grid grid-cols-1 md:grid-cols-2 mt-6 gap-5">
-        <EditExpense expenseInfo={expenseInfo} refreshData={() => getExpenseInfo()} />
+        <EditBudget budgetInfo={budgetInfo} refreshData={() => getBudgetInfo()} />
       </div>
 
     </div>
   );
 }
 
-export default ExpenseScreen;
+export default BudgetScreen;

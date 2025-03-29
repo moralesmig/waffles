@@ -76,7 +76,7 @@ function Dashboard() {
     return (
         <div className="p-8 pb-28">
             {/* <h2 className="font-bold text-4xl">Hi, {user?.firstName} 👋</h2> */}
-            <p className="text-gray-500">
+            <p className="text-gray-500 mb-7">
                 Here's what's happenning with your money. Lets manage your expenses.
             </p>
 

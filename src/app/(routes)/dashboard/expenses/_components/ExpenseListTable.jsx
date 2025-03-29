@@ -67,12 +67,12 @@ function ExpenseListTable({ expensesList, refreshData }) {
 
 
   return (
-    <div className="mt-3">
+    <div className="mt-2">
       <div className="grid grid-cols-4 rounded-tl-xl rounded-tr-xl bg-slate-200 p-2 mt-3">
         <h2 className="font-bold cursor-pointer" onClick={() => handleSort('name')}>Name</h2>
+        <h2 className="font-bold cursor-pointer" onClick={() => handleSort('category')}>Category</h2>
         <h2 className="font-bold cursor-pointer" onClick={() => handleSort('amount')}>Amount</h2>
-        <h2 className="font-bold ml-5 cursor-pointer" onClick={() => handleSort('createdAt')}>Date</h2>
-        <h2 className="font-bold ml-5">Delete</h2>
+        <h2 className="font-bold ml-5 cursor-pointer" onClick={() => handleSort('createdAt')}>Date</h2>        <h2 className="font-bold ml-5">Delete</h2>
       </div>
       {sortedExpenses.map((expenses, index) => (
         <div key={index} className="grid grid-cols-4 bg-slate-50 rounded-bl-xl rounded-br-xl p-2">
