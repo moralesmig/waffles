@@ -25,7 +25,7 @@ function IncomeList() {
       .leftJoin(Expenses, eq(Incomes.id, Expenses.budgetId))
       .where(eq(Incomes.createdBy, user?.primaryEmailAddress?.emailAddress))
       .groupBy(Incomes.id)
-      .orderBy(desc(Incomes.id));
+      .orderBy(desc(Incomes.datePaid));
     setIncomelist(result);
   };
 

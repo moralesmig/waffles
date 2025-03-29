@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import CreateBudget from './CreateBudget';
 import { db } from '@/../utils/dbConfig';
 import { desc, eq, getTableColumns, sql } from 'drizzle-orm';
 import { Budgets, Expenses } from '@/../utils/schema';
@@ -27,11 +26,9 @@ function BudgetList() {
             .leftJoin(Expenses, eq(Budgets.id, Expenses.budgetId))
             .where(eq(Budgets.createdBy, user?.primaryEmailAddress?.emailAddress))
             .groupBy(Budgets.id)
-            .orderBy(desc(Budgets.id))
-            ;
+            .orderBy(desc(Budgets.dueDate));
 
         setBudgetList(result);
-
     }
 
     return (
