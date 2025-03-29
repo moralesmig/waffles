@@ -67,7 +67,7 @@ function CreateIncomes({ refreshData }) {
           <div
             className="bg-slate-100 p-3 rounded-2xl
             items-center flex flex-col border-2 border-dashed
-            cursor-pointer hover:shadow-md mt-5"
+            cursor-pointer hover:shadow-md"
           >
             <h2 className="text-3xl">+</h2>
             <h2>Create New Income Source</h2>
