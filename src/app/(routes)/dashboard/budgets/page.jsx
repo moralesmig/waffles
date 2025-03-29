@@ -4,41 +4,37 @@ import React, { useState, useEffect } from "react";
 import BudgetList from "./_components/BudgetList";
 import CreateBudget from "./_components/CreateBudget";
 import { useUser } from "@clerk/nextjs";
-import { db } from "@/../utils/dbConfig";  // Make sure this is correctly configured
+import { db } from "@/../utils/dbConfig";
 import { getTableColumns, sql, eq, desc } from "drizzle-orm";
 import { Budgets, Expenses } from "@/../utils/schema";
 
 function Budget() {
     const { user } = useUser();
-
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
-    const [budgetsList, setBudgetList] = useState([]); // Budgets fetched from the database
-    const [filteredBudgetsList, setFilteredBudgetsList] = useState([]); // Filtered list based on date
-    const [loading, setLoading] = useState(true); // Loading state to show until budgets are fetched
+    const [budgetsList, setBudgetList] = useState([]);
+    const [filteredBudgetsList, setFilteredBudgetsList] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // Set initial start and end dates when component mounts
     useEffect(() => {
         const currentDate = new Date();
         const firstDayOfYear = new Date(currentDate.getFullYear(), 0, 1);
         const lastDayOfYear = new Date(currentDate.getFullYear(), 11, 31);
 
-        setStartDate(firstDayOfYear.toISOString().split("T")[0]); // YYYY-MM-DD format
+        setStartDate(firstDayOfYear.toISOString().split("T")[0]);
         setEndDate(lastDayOfYear.toISOString().split("T")[0]);
     }, []);
 
-    // Fetch budgets when the user logs in or when user changes
     useEffect(() => {
         if (user) {
             getBudgetList();
         }
-    }, [user]); // Dependency on user, fetch new budgets when user changes
+    }, [user]);
 
-    // Fetch budgets from the database
+    // Get All Budgets
     const getBudgetList = async () => {
         if (!user?.primaryEmailAddress?.emailAddress) return;
-
-        setLoading(true); // Set loading to true while fetching data
+        setLoading(true);
 
         try {
             const result = await db
@@ -54,19 +50,17 @@ function Budget() {
                 .orderBy(desc(Budgets.id));
 
             setBudgetList(result);
-            setLoading(false); // Set loading to false once data is fetched
+            setLoading(false);
         } catch (error) {
-            console.error("Error fetching budget:", error);
-            setLoading(false); // Set loading to false in case of error
+            console.error("Error fetching budgets:", error);
+            setLoading(false);
         }
     };
 
-    // Apply date filter when budgetsList, startDate, or endDate change
     useEffect(() => {
         applyDateFilter();
     }, [budgetsList, startDate, endDate]);
 
-    // Apply date filter to the budgets list
     const applyDateFilter = () => {
         const filteredBudgets = budgetsList.filter((budget) => {
             const budgetDate = new Date(budget.dueDate);
@@ -84,9 +78,9 @@ function Budget() {
                 <h2 className="font-bold text-3xl mt-0 mb-7">My Budgets</h2>
             </div>
 
+            {/* Pass getBudgetList as refreshData to CreateBudget */}
             <CreateBudget refreshData={getBudgetList} />
 
-            {/* Filter by Date */}
             <p className="font-bold pt-7">Filter by date</p>
             <div className="flex flex-wrap gap-2 pb-7 pt-2">
                 <div>
@@ -109,10 +103,8 @@ function Budget() {
                 </div>
             </div>
 
-            {/* Loading State */}
             {loading && <p className="text-gray-500">Loading budgets...</p>}
 
-            {/* Display Budget List */}
             <div>
                 {filteredBudgetsList.length > 0 ? (
                     <BudgetList budgetsList={filteredBudgetsList} refreshData={getBudgetList} />

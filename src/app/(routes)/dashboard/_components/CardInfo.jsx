@@ -1,43 +1,36 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-    PiggyBank,
-    ReceiptText,
-    Wallet,
-    CircleDollarSign
-} from "lucide-react";
+import { PiggyBank, ReceiptText, Wallet, CircleDollarSign } from "lucide-react";
 
 function CardInfo({ budgetList, incomeList }) {
     const [currentBalance, setCurrentBalance] = useState(0);
     const [totalBudget, setTotalBudget] = useState(0);
     const [totalSpend, setTotalSpend] = useState(0);
     const [totalIncome, setTotalIncome] = useState(0);
-    const [filteredBudgetList, setFilteredBudgetList] = useState([]);
-    const [filteredIncomeList, setFilteredIncomeList] = useState([]);
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const router = useRouter();
 
-    // Set startDate to the first day of the current month and endDate to the last day of the current month
     useEffect(() => {
         const currentDate = new Date();
-        const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-        const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+        const firstDayOfTheYear = new Date(currentDate.getFullYear(), 0, 1);
         const lastDayOfTheYear = new Date(currentDate.getFullYear(), 11, 31);
 
-
-        setStartDate(firstDay.toISOString().split("T")[0]); // Convert to YYYY-MM-DD format
+        setStartDate(firstDayOfTheYear.toISOString().split("T")[0]);
         setEndDate(lastDayOfTheYear.toISOString().split("T")[0]);
     }, []);
 
-    // Calculate card information on data or date change
     useEffect(() => {
-        if (budgetList.length > 0 || incomeList.length > 0) {
-            applyDateFilter(); // Filter data by date
-        }
+        applyDateFilter();
+        calculateCurrentBalance();
     }, [budgetList, incomeList, startDate, endDate]);
 
-    // Apply date filter to budgets and incomes
+    const calculateCurrentBalance = () => {
+        let totalSpend_ = budgetList.reduce((sum, budget) => sum + budget.totalSpend, 0);
+        let totalIncome_ = incomeList.reduce((sum, income) => sum + income.totalAmount, 0);
+        setCurrentBalance(totalIncome_ - totalSpend_);
+    };
+
     const applyDateFilter = () => {
         const filteredBudgets = budgetList.filter((budget) => {
             const budgetDate = new Date(budget.dueDate);
@@ -51,115 +44,52 @@ function CardInfo({ budgetList, incomeList }) {
                 (!endDate || incomeDate <= new Date(endDate));
         });
 
-        setFilteredBudgetList(filteredBudgets);
-        setFilteredIncomeList(filteredIncomes);
         calculateCardInfo(filteredBudgets, filteredIncomes);
     };
 
-    // Calculate totals based on filtered data
     const calculateCardInfo = (budgets, incomes) => {
-        let totalBudget_ = 0;
-        let totalSpend_ = 0;
-        let totalIncome_ = 0;
-
-        budgets.forEach((budget) => {
-            totalBudget_ += Number(budget.amount);
-            totalSpend_ += budget.totalSpend;
-        });
-
-        incomes.forEach((income) => {
-            totalIncome_ += income.totalAmount;
-        });
-
-        const currentBalance_ = totalIncome_ - totalSpend_;
+        let totalBudget_ = budgets.reduce((sum, budget) => sum + Number(budget.amount), 0);
+        let totalSpend_ = budgets.reduce((sum, budget) => sum + budget.totalSpend, 0);
+        let totalIncome_ = incomes.reduce((sum, income) => sum + income.totalAmount, 0);
 
         setTotalBudget(totalBudget_);
         setTotalSpend(totalSpend_);
         setTotalIncome(totalIncome_);
-        setCurrentBalance(currentBalance_);
     };
 
     return (
         <div>
-            {/* Date Filter Inputs
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <Card title="Current Balance" amount={currentBalance} icon={Wallet} />
+            </div>
             <p className="font-bold pt-5">Filter by date</p>
-            <div className="flex flex-col-2 items-center gap-2 pb-7 pt-2">
-                <div className="">
+            <div className="flex gap-2 pb-7 pt-2">
+                <div>
                     <label className="block text-sm font-medium">Start Date</label>
-                    <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="p-2 border rounded-md w-full"
-                    />
+                    <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="p-2 border rounded-md w-full" />
                 </div>
-                <div className="">
+                <div>
                     <label className="block text-sm font-medium">End Date</label>
-                    <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="p-2 border rounded-md w-full"
-                    />
+                    <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="p-2 border rounded-md w-full" />
                 </div>
             </div>
-            */}
-
-            {/* Cards Section */}
-            {filteredBudgetList?.length > 0 || filteredIncomeList?.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    <div className="p-7 border rounded-2xl flex items-center justify-between bg-gray-100">
-                        <div>
-                            <h2 className="text-sm">Current Balance</h2>
-                            <h2 className="font-bold text-2xl">
-                                ${currentBalance.toFixed(2)}
-                            </h2>
-                        </div>
-                        <Wallet className="bg-blue-800 p-3 h-12 w-12 rounded-full text-white" />
-                    </div>
-
-                    <div className="p-7 border rounded-2xl flex items-center justify-between" onClick={() => router.push('/dashboard/budgets')}>
-                        <div>
-                            <h2 className="text-sm">Total Budget</h2>
-                            <h2 className="font-bold text-2xl">
-                                ${totalBudget.toFixed(2)}
-                            </h2>
-                        </div>
-                        <PiggyBank className="bg-blue-800 p-3 h-12 w-12 rounded-full text-white" />
-                    </div>
-
-                    <div className="p-7 border rounded-2xl flex items-center justify-between" onClick={() => router.push('/dashboard/incomes')}>
-                        <div>
-                            <h2 className="text-sm">Total Income</h2>
-                            <h2 className="font-bold text-2xl">
-                                ${totalIncome.toFixed(2)}
-                            </h2>
-                        </div>
-                        <CircleDollarSign className="bg-blue-800 p-3 h-12 w-12 rounded-full text-white" />
-                    </div>
-
-                    <div className="p-7 border rounded-2xl flex items-center justify-between" onClick={() => router.push('/dashboard/expenses')}>
-                        <div>
-                            <h2 className="text-sm">Total Expenses</h2>
-                            <h2 className="font-bold text-2xl">
-                                ${totalSpend.toFixed(2)}
-                            </h2>
-                        </div>
-                        <ReceiptText className="bg-blue-800 p-3 h-12 w-12 rounded-full text-white" />
-                    </div>
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {[1, 2, 3].map((item, index) => (
-                        <div
-                            className="h-[110px] w-full bg-slate-200 animate-pulse rounded-lg"
-                            key={index}
-                        ></div>
-                    ))}
-                </div>
-            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <Card title="Total Budget" amount={totalBudget} icon={PiggyBank} onClick={() => router.push('/dashboard/budgets')} />
+                <Card title="Total Income" amount={totalIncome} icon={CircleDollarSign} onClick={() => router.push('/dashboard/incomes')} />
+                <Card title="Total Expenses" amount={totalSpend} icon={ReceiptText} onClick={() => router.push('/dashboard/expenses')} />
+            </div>
         </div>
     );
 }
+
+const Card = ({ title, amount, icon: Icon, onClick }) => (
+    <div className="p-7 border rounded-2xl flex items-center justify-between bg-gray-100" onClick={onClick}>
+        <div>
+            <h2 className="text-sm">{title}</h2>
+            <h2 className="font-bold text-2xl">${amount.toFixed(2)}</h2>
+        </div>
+        <Icon className="bg-blue-800 p-3 h-12 w-12 rounded-full text-white" />
+    </div>
+);
 
 export default CardInfo;

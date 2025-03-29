@@ -25,16 +25,14 @@ function CreateBudget({ refreshData }) {
     const [name, setName] = useState("");
     const [amount, setAmount] = useState("");
     const [dueDate, setDueDate] = useState("");
+    const [dialogOpen, setDialogOpen] = useState(false); // Track modal open/close
     const { user } = useUser();
 
-    // Handle date change without manual time zone conversion
     const handleDateChange = (e) => {
-        setDueDate(e.target.value); // The input gives the date in YYYY-MM-DD format
+        setDueDate(e.target.value);
     };
 
-    // Create New Budget
     const onCreateBudget = async () => {
-        // Directly use the dueDate without conversion since it's in YYYY-MM-DD format already
         if (!dueDate || !name || !amount) {
             toast.error("Please fill in all fields.");
             return;
@@ -44,16 +42,20 @@ function CreateBudget({ refreshData }) {
             const result = await db
                 .insert(Budgets)
                 .values({
-                    name: name,
-                    amount: amount,
+                    name,
+                    amount: Number(amount), // Ensure amount is stored as a number
                     createdBy: user?.primaryEmailAddress?.emailAddress,
-                    dueDate: dueDate, // Use the dueDate directly
+                    dueDate,
                     icon: emojiIcon,
                 })
                 .returning({ insertedId: Budgets.id });
 
             if (result) {
-                refreshData();
+                setDialogOpen(false); // Close the modal
+                setName(""); // Reset fields
+                setAmount("");
+                setDueDate("");
+                refreshData(); // Immediately refresh budget list
                 toast.success("New Budget Created!");
             }
         } catch (error) {
@@ -64,7 +66,7 @@ function CreateBudget({ refreshData }) {
 
     return (
         <div>
-            <Dialog>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogTrigger asChild>
                     <div
                         className="bg-slate-100 p-3 rounded-2xl
@@ -87,54 +89,36 @@ function CreateBudget({ refreshData }) {
                                 >
                                     {emojiIcon}
                                 </Button>
-                                <div className="absolute z-20">
-                                    <EmojiPicker
-                                        open={openEmojiPicker}
-                                        onEmojiClick={(e) => {
-                                            setEmojiIcon(e.emoji);
-                                            setOpenEmojiPicker(false);
-                                        }}
-                                    />
-                                </div>
+                                {openEmojiPicker && (
+                                    <div className="absolute z-20">
+                                        <EmojiPicker
+                                            open={openEmojiPicker}
+                                            onEmojiClick={(e) => {
+                                                setEmojiIcon(e.emoji);
+                                                setOpenEmojiPicker(false);
+                                            }}
+                                        />
+                                    </div>
+                                )}
                                 <div className="mt-2">
                                     <h2 className="text-black font-medium my-1 text-left pl-2">Name</h2>
-                                    <Input
-                                        type="text"
-                                        placeholder="Description"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                    />
+                                    <Input type="text" value={name} onChange={(e) => setName(e.target.value)} />
                                 </div>
                                 <div className="mt-5">
                                     <h2 className="text-black font-medium my-1 text-left pl-2">Amount</h2>
-                                    <Input
-                                        type="number"
-                                        placeholder="$0"
-                                        value={amount}
-                                        onChange={(e) => setAmount(e.target.value)}
-                                    />
+                                    <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
                                 </div>
                                 <div className="mt-5">
-                                    <h2 className="text-black font-medium my-1 text-left pl-2">Due Date (optional)</h2>
-                                    <Input
-                                        type="date"
-                                        value={dueDate}
-                                        onChange={handleDateChange}
-                                    />
+                                    <h2 className="text-black font-medium my-1 text-left pl-2">Due Date</h2>
+                                    <Input type="date" value={dueDate} onChange={handleDateChange} />
                                 </div>
                             </div>
                         </DialogDescription>
                     </DialogHeader>
-                    <DialogFooter className="sm:justify-start">
-                        <DialogClose asChild>
-                            <Button
-                                disabled={!(name && amount && dueDate)}
-                                onClick={onCreateBudget}
-                                className="mt-5 w-full rounded-full"
-                            >
-                                Create Budget
-                            </Button>
-                        </DialogClose>
+                    <DialogFooter>
+                        <Button disabled={!(name && amount && dueDate)} onClick={onCreateBudget} className="mt-5 w-full">
+                            Create Budget
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

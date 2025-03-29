@@ -2,10 +2,10 @@
 import { db } from "@/../utils/dbConfig";
 import { Budgets } from "@/../utils/schema";
 import { useUser } from "@clerk/nextjs";
-import { desc, eq, getTableColumns, sql } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import React, { useEffect, useState } from "react";
 import { Button } from "@/./components/ui/button";
-import { ArrowLeft, Pen, PenBox, Trash } from "lucide-react";
+import { ArrowLeft, Trash } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,49 +20,52 @@ import {
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import EditBudget from "../_components/EditBudget";
-import BudgetItem from "../_components/BudgetItem"
 
 function BudgetScreen({ params }) {
   const { user } = useUser();
   const [budgetInfo, setBudgetInfo] = useState();
-  const [BudgetList, setBudgetList] = useState([]);
   const route = useRouter();
+
   useEffect(() => {
-    user && getBudgetInfo();
-  }, [user]);
+    if (user) {
+      getBudgetInfo();
+    }
+  }, [user, params.id]); // Add params.id to re-fetch when the budget ID changes
 
-  /**
-   * Get Budget Information
-   */
+  // Get Budget Information
   const getBudgetInfo = async () => {
-    const result = await db
-      .select()
-      .from(Budgets)
-      .where(eq(Budgets.id, params.id))
-      .orderBy(desc(Budgets.id))
+    try {
+      const result = await db
+        .select()
+        .from(Budgets)
+        .where(eq(Budgets.id, params.id))
+        .orderBy(desc(Budgets.id));
 
-    setBudgetInfo(result[0]);
+      if (result.length > 0) {
+        setBudgetInfo(result[0]);
+      }
+    } catch (error) {
+      console.error("Error fetching budget info:", error);
+    }
   };
 
-  /**
- * Used to Delete Budget
- */
+  // Delete Budget
   const deleteBudget = async () => {
-    const deleteBudgetResult = await db
-      .delete(Budgets)
-      .where(eq(Budgets.id, params.id))
-      .returning();
-
-    if (deleteBudgetResult) {
-      const result = await db
+    try {
+      const deleteBudgetResult = await db
         .delete(Budgets)
         .where(eq(Budgets.id, params.id))
         .returning();
-    }
-    toast("Budget Deleted!");
-    route.replace("/dashboard/budgets");
-  };
 
+      if (deleteBudgetResult) {
+        toast.success("Budget Deleted!");
+        route.replace("/dashboard/budgets");
+      }
+    } catch (error) {
+      console.error("Error deleting budget:", error);
+      toast.error("Failed to delete budget.");
+    }
+  };
 
   return (
     <div className="p-10">
@@ -72,8 +75,6 @@ function BudgetScreen({ params }) {
           <p>Edit Budget</p>
         </span>
         <div className="flex gap-2 items-center">
-
-
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button className="flex gap-2 rounded-full" variant="destructive">
@@ -84,7 +85,7 @@ function BudgetScreen({ params }) {
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action cannot be undone and will permanenly delete the selected budget.
+                  This action cannot be undone and will permanently delete the selected budget.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -98,11 +99,9 @@ function BudgetScreen({ params }) {
         </div>
       </h2>
 
-
       <div className="grid grid-cols-1 md:grid-cols-2 mt-6 gap-5">
-        <EditBudget budgetInfo={budgetInfo} refreshData={() => getBudgetInfo()} />
+        <EditBudget budgetInfo={budgetInfo} refreshData={getBudgetInfo} />
       </div>
-
     </div>
   );
 }
