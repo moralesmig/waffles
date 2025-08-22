@@ -4,73 +4,22 @@ import React, { useState, useEffect } from "react";
 import BudgetList from "./_components/BudgetList";
 import CreateBudget from "./_components/CreateBudget";
 import { useUser } from "@clerk/nextjs";
-import { db } from "@/../utils/dbConfig";
-import { getTableColumns, sql, eq, desc } from "drizzle-orm";
-import { Budgets, Expenses } from "@/../utils/schema";
 
 function Budget() {
     const { user } = useUser();
-    const [startDate, setStartDate] = useState("");
-    const [endDate, setEndDate] = useState("");
-    const [budgetsList, setBudgetList] = useState([]);
-    const [filteredBudgetsList, setFilteredBudgetsList] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [selectedMonth, setSelectedMonth] = useState("");
+    const [selectedYear, setSelectedYear] = useState("");
+    const [loading, setLoading] = useState(false); // Default to false to avoid unnecessary "Loading..." message
 
+    // Set default month and year to the current month and year
     useEffect(() => {
         const currentDate = new Date();
-        const firstDayOfYear = new Date(currentDate.getFullYear(), 0, 1);
-        const lastDayOfYear = new Date(currentDate.getFullYear(), 11, 31);
+        const currentMonth = String(currentDate.getMonth() + 1).padStart(2, "0"); // MM format
+        const currentYear = currentDate.getFullYear(); // YYYY format
 
-        setStartDate(firstDayOfYear.toISOString().split("T")[0]);
-        setEndDate(lastDayOfYear.toISOString().split("T")[0]);
+        setSelectedMonth(currentMonth);
+        setSelectedYear(currentYear);
     }, []);
-
-    useEffect(() => {
-        if (user) {
-            getBudgetList();
-        }
-    }, [user]);
-
-    // Get All Budgets
-    const getBudgetList = async () => {
-        if (!user?.primaryEmailAddress?.emailAddress) return;
-        setLoading(true);
-
-        try {
-            const result = await db
-                .select({
-                    ...getTableColumns(Budgets),
-                    totalSpend: sql`COALESCE(SUM(${Expenses.amount}), 0)`.mapWith(Number),
-                    totalItem: sql`COUNT(${Expenses.id})`.mapWith(Number),
-                })
-                .from(Budgets)
-                .leftJoin(Expenses, eq(Budgets.id, Expenses.budgetId))
-                .where(eq(Budgets.createdBy, user.primaryEmailAddress.emailAddress))
-                .groupBy(Budgets.id)
-                .orderBy(desc(Budgets.id));
-
-            setBudgetList(result);
-            setLoading(false);
-        } catch (error) {
-            console.error("Error fetching budgets:", error);
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        applyDateFilter();
-    }, [budgetsList, startDate, endDate]);
-
-    const applyDateFilter = () => {
-        const filteredBudgets = budgetsList.filter((budget) => {
-            const budgetDate = new Date(budget.dueDate);
-            return (
-                (!startDate || budgetDate >= new Date(startDate)) &&
-                (!endDate || budgetDate <= new Date(endDate))
-            );
-        });
-        setFilteredBudgetsList(filteredBudgets);
-    };
 
     return (
         <div className="p-10 pb-28">
@@ -78,40 +27,49 @@ function Budget() {
                 <h2 className="font-bold text-3xl mt-0 mb-7">My Budgets</h2>
             </div>
 
-            {/* Pass getBudgetList as refreshData to CreateBudget */}
-            <CreateBudget refreshData={getBudgetList} />
+            {/* Pass getFilteredBudgets as refreshData to CreateBudget */}
+            <CreateBudget refreshData={() => setLoading(true)} />
 
-            <p className="font-bold pt-7">Filter by date</p>
-            <div className="flex flex-wrap gap-2 pb-7 pt-2">
+            <div className="flex gap-4 pb-7 pt-7">
                 <div>
-                    <label className="block text-sm font-medium">Start Date</label>
-                    <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
+                    <label className="block text-sm font-bold">Select Month</label>
+                    <select
+                        value={selectedMonth}
+                        onChange={(e) => setSelectedMonth(e.target.value)}
                         className="p-2 border rounded-md w-full"
-                    />
+                    >
+                        <option value="">Select Month</option>
+                        {Array.from({ length: 12 }, (_, i) => {
+                            const month = new Date(0, i).toLocaleString("default", { month: "long" });
+                            return <option key={i} value={String(i + 1).padStart(2, "0")}>{month}</option>;
+                        })}
+                    </select>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium">End Date</label>
-                    <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
+                    <label className="block text-sm font-bold">Select Year</label>
+                    <select
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(e.target.value)}
                         className="p-2 border rounded-md w-full"
-                    />
+                    >
+                        <option value="">Select Year</option>
+                        {Array.from({ length: 5 }, (_, i) => {
+                            const year = new Date().getFullYear() - i;
+                            return <option key={year} value={year}>{year}</option>;
+                        })}
+                    </select>
                 </div>
             </div>
 
-            {loading && <p className="text-gray-500">Loading budgets...</p>}
-
-            <div>
-                {filteredBudgetsList.length > 0 ? (
-                    <BudgetList budgetsList={filteredBudgetsList} refreshData={getBudgetList} />
-                ) : (
-                    !loading && <p className="text-gray-500">No budgets found for the selected date range.</p>
-                )}
-            </div>
+            {loading ? (
+                <p className="text-gray-500">Loading budgets...</p>
+            ) : (
+                <BudgetList
+                    selectedMonth={selectedMonth}
+                    selectedYear={selectedYear}
+                    setLoading={setLoading}
+                />
+            )}
         </div>
     );
 }
