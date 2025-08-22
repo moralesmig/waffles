@@ -9,17 +9,27 @@ function Budget() {
     const { user } = useUser();
     const [selectedMonth, setSelectedMonth] = useState("");
     const [selectedYear, setSelectedYear] = useState("");
-    const [loading, setLoading] = useState(false); // Default to false to avoid unnecessary "Loading..." message
+    const [loading, setLoading] = useState(false);
 
     // Set default month and year to the current month and year
     useEffect(() => {
         const currentDate = new Date();
-        const currentMonth = String(currentDate.getMonth() + 1).padStart(2, "0"); // MM format
-        const currentYear = currentDate.getFullYear(); // YYYY format
-
+        const currentMonth = String(currentDate.getMonth() + 1).padStart(2, "0");
+        const currentYear = currentDate.getFullYear();
         setSelectedMonth(currentMonth);
         setSelectedYear(currentYear);
     }, []);
+
+    // When either selectedMonth or selectedYear changes, set loading to true then false after BudgetList finishes loading
+    useEffect(() => {
+        // Only trigger loading if both values are set (skip on initial mount)
+        if (selectedMonth && selectedYear) {
+            setLoading(true);
+        }
+    }, [selectedMonth, selectedYear]);
+
+    // Callback for BudgetList to notify loading is done
+    const handleLoadingDone = () => setLoading(false);
 
     return (
         <div className="p-10 pb-28">
@@ -27,7 +37,7 @@ function Budget() {
                 <h2 className="font-bold text-3xl mt-0 mb-7">My Budgets</h2>
             </div>
 
-            {/* Pass getFilteredBudgets as refreshData to CreateBudget */}
+            {/* Pass handleLoadingDone to CreateBudget so it can refresh budgets if needed */}
             <CreateBudget refreshData={() => setLoading(true)} />
 
             <div className="flex gap-4 pb-7 pt-7">
@@ -61,15 +71,17 @@ function Budget() {
                 </div>
             </div>
 
+            {/* BudgetList gets a callback to signal loading is done */}
             {loading ? (
                 <p className="text-gray-500">Loading budgets...</p>
-            ) : (
-                <BudgetList
-                    selectedMonth={selectedMonth}
-                    selectedYear={selectedYear}
-                    setLoading={setLoading}
-                />
-            )}
+            ) : null}
+
+            <BudgetList
+                selectedMonth={selectedMonth}
+                selectedYear={selectedYear}
+                setLoading={setLoading}
+                onLoaded={handleLoadingDone}
+            />
         </div>
     );
 }
