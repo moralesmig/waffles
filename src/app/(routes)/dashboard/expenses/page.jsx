@@ -2,7 +2,7 @@
 
 import { db } from '@/../utils/dbConfig';
 import { Budgets, Expenses } from '@/../utils/schema';
-import { desc, eq, getTableColumns, sql } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 import React, { useEffect, useState } from 'react';
 import ExpenseList from './_components/ExpenseList';
 import { useUser } from '@clerk/nextjs';
@@ -11,43 +11,51 @@ import CreateExpense from "../expenses/_components/CreateExpense";
 function ExpensesScreen({ params }) {
   const [expensesList, setExpensesList] = useState([]);
   const [categories, setCategories] = useState([]); // To store available budget categories
-  const { user } = useUser();
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
   const [filteredExpensesList, setFilteredExpensesList] = useState([]);
   const [budgetInfo, setbudgetInfo] = useState();
-  const [loading, setLoading] = useState(true); // Loading state to show until budgets are fetched
   const [selectedCategory, setSelectedCategory] = useState(""); // State for selected category filter
+  const { user } = useUser();
 
-  // Set start date and end date
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+  const [loading, setLoading] = useState(false); // Default to false to avoid unnecessary "Loading..." message
+
+  // Set default month and year to the current month and year
   useEffect(() => {
     const currentDate = new Date();
-    const firstDayOfTheYear = new Date(currentDate.getFullYear(), 0, 1);
-    const lastDayOfTheYear = new Date(currentDate.getFullYear(), 11, 31);
-    const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+    const currentMonth = String(currentDate.getMonth() + 1).padStart(2, "0"); // MM format
+    const currentYear = currentDate.getFullYear(); // YYYY format
 
-    setStartDate(firstDayOfTheYear.toISOString().split("T")[0]); // Convert to YYYY-MM-DD format
-    setEndDate(lastDayOfTheYear.toISOString().split("T")[0]);
+    setSelectedMonth(currentMonth);
+    setSelectedYear(currentYear);
   }, []);
 
-  // Calculate card information on data or date change
+  // Apply filters whenever the expenses list, selected month, year, or category changes
   useEffect(() => {
     if (expensesList.length > 0) {
-      applyFilters(); // Apply both date and category filter
+      applyFilters(); // Apply both date and category filters
     }
-  }, [expensesList, startDate, endDate, selectedCategory]);
+  }, [expensesList, selectedMonth, selectedYear, selectedCategory]);
 
-  // Apply date and category filter to expenses
+  // Apply date and category filters to expenses
   const applyFilters = () => {
-    const filteredExpenses = expensesList.filter((expense) => {
-      const expenseDate = new Date(expense.createdAt);
-      const matchesDateRange = (!startDate || expenseDate >= new Date(startDate)) &&
-        (!endDate || expenseDate <= new Date(endDate));
+    if (!selectedMonth || !selectedYear) {
+      setFilteredExpensesList(expensesList); // If no month or year is selected, show all expenses
+      return;
+    }
 
+    const filteredExpenses = expensesList.filter((expense) => {
+      if (!expense.createdAt) return false; // Ensure createdAt is valid
+
+      const expenseDate = new Date(expense.createdAt); // Convert createdAt to a Date object
+      const expenseMonth = String(expenseDate.getMonth() + 1).padStart(2, "0"); // Extract month (MM format)
+      const expenseYear = expenseDate.getFullYear(); // Extract year (YYYY format)
+
+      // Strictly match both month and year
+      const matchesDate = expenseMonth === selectedMonth && expenseYear === parseInt(selectedYear, 10);
       const matchesCategory = selectedCategory ? expense.budgetName === selectedCategory : true;
 
-      return matchesDateRange && matchesCategory;
+      return matchesDate && matchesCategory;
     });
 
     setFilteredExpensesList(filteredExpenses);
@@ -65,7 +73,8 @@ function ExpensesScreen({ params }) {
     try {
       const result = await db
         .select({
-          ...getTableColumns(Budgets),
+          id: Budgets.id,
+          name: Budgets.name,
           totalSpend: sql`sum(${Expenses.amount})`.mapWith(Number),
           totalItem: sql`count(${Expenses.id})`.mapWith(Number),
         })
@@ -123,30 +132,39 @@ function ExpensesScreen({ params }) {
       </div>
 
       {/* Filter by Date */}
-      <p className="font-bold pt-5">Filter by date</p>
-      <div className="flex flex-col-2 items-center gap-2 pt-2">
-        <div className="">
-          <label className="block text-sm font-medium">Start Date</label>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
+      <div className="flex gap-4 pb-7 pt-7">
+        <div>
+          <label className="block text-sm font-bold">Select Month</label>
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
             className="p-2 border rounded-md w-full"
-          />
+          >
+            <option value="">Select Month</option>
+            {Array.from({ length: 12 }, (_, i) => {
+              const month = new Date(0, i).toLocaleString("default", { month: "long" });
+              return <option key={i} value={String(i + 1).padStart(2, "0")}>{month}</option>;
+            })}
+          </select>
         </div>
-        <div className="">
-          <label className="block text-sm font-medium">End Date</label>
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
+        <div>
+          <label className="block text-sm font-bold">Select Year</label>
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(e.target.value)}
             className="p-2 border rounded-md w-full"
-          />
+          >
+            <option value="">Select Year</option>
+            {Array.from({ length: 5 }, (_, i) => {
+              const year = new Date().getFullYear() + 1 - i;
+              return <option key={year} value={year}>{year}</option>;
+            })}
+          </select>
         </div>
       </div>
 
       {/* Filter by Category */}
-      <p className="font-bold mt-5">Filter by category</p>
+      <p className="font-bold mt-5">Filter by budget</p>
       <div className="flex flex-col gap-2 pb-7 pt-2">
         <select
           value={selectedCategory}

@@ -77,9 +77,9 @@ function CardInfo({ budgetList, incomeList }) {
                 <Card title="Current Balance" amount={currentBalance} icon={Wallet} />
             </div>
 
-            <div className="flex gap-4 pb-7 pt-2">
+            <div className="flex gap-4 pb-7 pt-10">
                 <div>
-                    <label className="block text-sm font-medium">Select Month</label>
+                    <label className="block text-sm font-bold">Select Month</label>
                     <select
                         value={selectedMonth}
                         onChange={(e) => setSelectedMonth(e.target.value)}
@@ -93,7 +93,7 @@ function CardInfo({ budgetList, incomeList }) {
                     </select>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium">Select Year</label>
+                    <label className="block text-sm font-bold">Select Year</label>
                     <select
                         value={selectedYear}
                         onChange={(e) => setSelectedYear(e.target.value)}
@@ -101,7 +101,7 @@ function CardInfo({ budgetList, incomeList }) {
                     >
                         <option value="">Select Year</option>
                         {Array.from({ length: 5 }, (_, i) => {
-                            const year = new Date().getFullYear() - i;
+                            const year = new Date().getFullYear() + 1 - i;
                             return <option key={year} value={year}>{year}</option>;
                         })}
                     </select>
