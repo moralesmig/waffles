@@ -7,50 +7,64 @@ function CardInfo({ budgetList, incomeList }) {
     const [totalBudget, setTotalBudget] = useState(0);
     const [totalSpend, setTotalSpend] = useState(0);
     const [totalIncome, setTotalIncome] = useState(0);
-    const [startDate, setStartDate] = useState("");
-    const [endDate, setEndDate] = useState("");
+    const [selectedMonth, setSelectedMonth] = useState("");
+    const [selectedYear, setSelectedYear] = useState("");
     const router = useRouter();
 
+    // Set default month and year to the current month and year
     useEffect(() => {
         const currentDate = new Date();
-        const firstDayOfTheYear = new Date(currentDate.getFullYear(), 0, 1);
-        const lastDayOfTheYear = new Date(currentDate.getFullYear(), 11, 31);
+        const currentMonth = String(currentDate.getMonth() + 1).padStart(2, "0"); // MM format
+        const currentYear = currentDate.getFullYear(); // YYYY format
 
-        setStartDate(firstDayOfTheYear.toISOString().split("T")[0]);
-        setEndDate(lastDayOfTheYear.toISOString().split("T")[0]);
+        setSelectedMonth(currentMonth);
+        setSelectedYear(currentYear);
     }, []);
 
+    // Calculate current balance based on all incomes and expenses
     useEffect(() => {
-        applyDateFilter();
         calculateCurrentBalance();
-    }, [budgetList, incomeList, startDate, endDate]);
+    }, [budgetList, incomeList]);
 
     const calculateCurrentBalance = () => {
-        let totalSpend_ = budgetList.reduce((sum, budget) => sum + budget.totalSpend, 0);
-        let totalIncome_ = incomeList.reduce((sum, income) => sum + income.totalAmount, 0);
+        const totalIncome_ = incomeList.reduce((sum, income) => sum + Number(income.totalAmount), 0);
+        const totalSpend_ = budgetList.reduce((sum, budget) => sum + Number(budget.totalSpend || 0), 0);
+
         setCurrentBalance(totalIncome_ - totalSpend_);
     };
 
+    // Filter budgets and incomes based on selected month and year
+    useEffect(() => {
+        if (selectedMonth && selectedYear) {
+            applyDateFilter(); // Trigger filtering when selectedMonth or selectedYear changes
+        }
+    }, [budgetList, incomeList, selectedMonth, selectedYear]);
+
     const applyDateFilter = () => {
+        if (!selectedMonth || !selectedYear) return;
+
+        const startDate = `${selectedYear}-${selectedMonth}-01`;
+        const endDate = new Date(selectedYear, parseInt(selectedMonth, 10), 0).toISOString().split("T")[0]; // Last day of the month
+
+        // Filter budgets
         const filteredBudgets = budgetList.filter((budget) => {
-            const budgetDate = new Date(budget.dueDate);
-            return (!startDate || budgetDate >= new Date(startDate)) &&
-                (!endDate || budgetDate <= new Date(endDate));
+            const dueDate = budget.dueDate; // Assuming dueDate is in YYYY-MM-DD format
+            return dueDate >= startDate && dueDate <= endDate;
         });
 
+        // Filter incomes
         const filteredIncomes = incomeList.filter((income) => {
-            const incomeDate = new Date(income.datePaid);
-            return (!startDate || incomeDate >= new Date(startDate)) &&
-                (!endDate || incomeDate <= new Date(endDate));
+            const datePaid = income.datePaid; // Assuming datePaid is in YYYY-MM-DD format
+            return datePaid >= startDate && datePaid <= endDate;
         });
 
-        calculateCardInfo(filteredBudgets, filteredIncomes);
+        calculateFilteredTotals(filteredBudgets, filteredIncomes);
     };
 
-    const calculateCardInfo = (budgets, incomes) => {
-        let totalBudget_ = budgets.reduce((sum, budget) => sum + Number(budget.amount), 0);
-        let totalSpend_ = budgets.reduce((sum, budget) => sum + budget.totalSpend, 0);
-        let totalIncome_ = incomes.reduce((sum, income) => sum + income.totalAmount, 0);
+    const calculateFilteredTotals = (budgets, incomes) => {
+        const totalBudget_ = budgets.reduce((sum, budget) => sum + Number(budget.amount), 0);
+        const totalSpend_ = budgets.reduce((sum, budget) => sum + Number(budget.totalSpend || 0), 0);
+        const totalIncome_ = incomes.reduce((sum, income) => sum + Number(income.totalAmount), 0);
 
         setTotalBudget(totalBudget_);
         setTotalSpend(totalSpend_);
@@ -62,17 +76,38 @@ function CardInfo({ budgetList, incomeList }) {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 <Card title="Current Balance" amount={currentBalance} icon={Wallet} />
             </div>
-            <p className="font-bold pt-5">Filter by date</p>
-            <div className="flex gap-2 pb-7 pt-2">
+
+            <div className="flex gap-4 pb-7 pt-2">
                 <div>
-                    <label className="block text-sm font-medium">Start Date</label>
-                    <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="p-2 border rounded-md w-full" />
+                    <label className="block text-sm font-medium">Select Month</label>
+                    <select
+                        value={selectedMonth}
+                        onChange={(e) => setSelectedMonth(e.target.value)}
+                        className="p-2 border rounded-md w-full"
+                    >
+                        <option value="">Select Month</option>
+                        {Array.from({ length: 12 }, (_, i) => {
+                            const month = new Date(0, i).toLocaleString("default", { month: "long" });
+                            return <option key={i} value={String(i + 1).padStart(2, "0")}>{month}</option>;
+                        })}
+                    </select>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium">End Date</label>
-                    <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="p-2 border rounded-md w-full" />
+                    <label className="block text-sm font-medium">Select Year</label>
+                    <select
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(e.target.value)}
+                        className="p-2 border rounded-md w-full"
+                    >
+                        <option value="">Select Year</option>
+                        {Array.from({ length: 5 }, (_, i) => {
+                            const year = new Date().getFullYear() - i;
+                            return <option key={year} value={year}>{year}</option>;
+                        })}
+                    </select>
                 </div>
             </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 <Card title="Total Budget" amount={totalBudget} icon={PiggyBank} onClick={() => router.push('/dashboard/budgets')} />
                 <Card title="Total Income" amount={totalIncome} icon={CircleDollarSign} onClick={() => router.push('/dashboard/incomes')} />
