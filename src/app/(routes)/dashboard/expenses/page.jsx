@@ -39,25 +39,58 @@ function ExpensesScreen({ params }) {
 
   // Apply date and category filters to expenses
   const applyFilters = () => {
-    if (!selectedMonth || !selectedYear) {
-      setFilteredExpensesList(expensesList); // If no month or year is selected, show all expenses
-      return;
+    let filteredExpenses = [];
+    if (selectedCategory) {
+      // Find the budgetId for the selected Budgets.name from categories (which should be Budgets)
+      const selectedBudgetObj = budgetInfo && budgetInfo.name && budgetInfo.id
+        ? { name: budgetInfo.name, id: budgetInfo.id }
+        : null;
+      // If categories is an array of budget objects, find by name
+      // Otherwise, fallback to searching in expensesList
+      let selectedBudgetId = null;
+      if (Array.isArray(categories) && categories.length && typeof categories[0] === 'object' && categories[0].name && categories[0].id) {
+        selectedBudgetId = categories.find(
+          (cat) => cat.name && cat.name.trim().toLowerCase() === selectedCategory.trim().toLowerCase()
+        )?.id;
+      } else if (selectedBudgetObj && selectedBudgetObj.name.trim().toLowerCase() === selectedCategory.trim().toLowerCase()) {
+        selectedBudgetId = selectedBudgetObj.id;
+      } else {
+        selectedBudgetId = expensesList.find(
+          (expense) => expense.budgetName && expense.budgetName.trim().toLowerCase() === selectedCategory.trim().toLowerCase()
+        )?.budgetId;
+      }
+      console.log('Selected Category:', selectedCategory);
+      console.log('Selected BudgetId:', selectedBudgetId);
+      console.log('All Expenses:', expensesList);
+      filteredExpenses = expensesList.filter((expense) => {
+        if (!expense.budgetId) return false;
+        const matchesCategory = expense.budgetId === selectedBudgetId;
+        if (!matchesCategory) return false;
+        if (selectedMonth && selectedYear) {
+          if (!expense.createdAt) return false;
+          const expenseDate = new Date(expense.createdAt);
+          const expenseMonth = String(expenseDate.getMonth() + 1).padStart(2, "0");
+          const expenseYear = expenseDate.getFullYear();
+          return expenseMonth === selectedMonth && expenseYear === parseInt(selectedYear, 10);
+        }
+        return true;
+      });
+      console.log('Filtered Expenses:', filteredExpenses);
+    } else if (selectedMonth && selectedYear) {
+      // Filter by month/year if no category selected
+      filteredExpenses = expensesList.filter((expense) => {
+        if (!expense.createdAt) return false;
+        const expenseDate = new Date(expense.createdAt);
+        const expenseMonth = String(expenseDate.getMonth() + 1).padStart(2, "0");
+        const expenseYear = expenseDate.getFullYear();
+        return expenseMonth === selectedMonth && expenseYear === parseInt(selectedYear, 10);
+      });
+      console.log('Filtered Expenses by Month/Year:', filteredExpenses);
+    } else {
+      // If nothing selected, show nothing
+      filteredExpenses = [];
+      console.log('No selection, showing nothing.');
     }
-
-    const filteredExpenses = expensesList.filter((expense) => {
-      if (!expense.createdAt) return false; // Ensure createdAt is valid
-
-      const expenseDate = new Date(expense.createdAt); // Convert createdAt to a Date object
-      const expenseMonth = String(expenseDate.getMonth() + 1).padStart(2, "0"); // Extract month (MM format)
-      const expenseYear = expenseDate.getFullYear(); // Extract year (YYYY format)
-
-      // Strictly match both month and year
-      const matchesDate = expenseMonth === selectedMonth && expenseYear === parseInt(selectedYear, 10);
-      const matchesCategory = selectedCategory ? expense.budgetName === selectedCategory : true;
-
-      return matchesDate && matchesCategory;
-    });
-
     setFilteredExpensesList(filteredExpenses);
   };
 
@@ -93,7 +126,7 @@ function ExpensesScreen({ params }) {
         .from(Budgets)
         .where(eq(Budgets.createdBy, user?.primaryEmailAddress?.emailAddress));
 
-      setCategories(categoriesResult.map((budget) => budget.name)); // Set categories
+  setCategories(categoriesResult.map((budget) => budget.name).sort((a, b) => a.localeCompare(b))); // Set categories alphabetically
     } catch (error) {
       console.error("Error fetching expense:", error);
       setLoading(false); // Set loading to false in case of error
@@ -106,14 +139,15 @@ function ExpensesScreen({ params }) {
       id: Expenses.id,
       name: Expenses.name,
       amount: Expenses.amount,
+      budgetId: Expenses.budgetId,
       createdAt: Expenses.createdAt,
-      budgetName: Budgets.name // Add budget name for filtering
     }).from(Expenses)
-      .rightJoin(Budgets, eq(Budgets.id, Expenses.budgetId))
-      .where(eq(Budgets.createdBy, user?.primaryEmailAddress.emailAddress))
-      .orderBy(desc(Expenses.id));
+      .leftJoin(Budgets, eq(Budgets.id, Expenses.budgetId))
+      .where(eq(Budgets.createdBy, user?.primaryEmailAddress?.emailAddress))
+      .orderBy(desc(Expenses.createdAt));
 
-    setExpensesList(result);
+    // Only include expenses that have a valid budgetName and budgetId
+    setExpensesList(result.filter(exp => exp.budgetName && exp.budgetId));
   };
 
   return (

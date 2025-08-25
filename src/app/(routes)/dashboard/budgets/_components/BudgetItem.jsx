@@ -39,7 +39,7 @@ function BudgetItem({ budget }) {
                             ${budget.totalSpend ? budget.totalSpend : 0} Paid
                         </h2>
                         <h2 className="text-xs text-slate-400">
-                            ${budget.amount - budget.totalSpend} Remaining
+                            ${(budget.amount - budget.totalSpend).toFixed(2)} Remaining
                         </h2>
                     </div>
                     <div className="w-full bg-slate-300 h-2 rounded-full">
