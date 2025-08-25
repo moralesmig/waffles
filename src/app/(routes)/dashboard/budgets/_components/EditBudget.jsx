@@ -16,15 +16,17 @@ import EmojiPicker from "emoji-picker-react";
 import { useUser } from "@clerk/nextjs";
 import { Input } from "@/./components/ui/input";
 import { db } from "@/../utils/dbConfig";
-import { Budgets } from "@/../utils/schema";
+import { Budgets, Expenses } from "@/../utils/schema";
 import { eq } from "drizzle-orm";
 import { toast } from "sonner";
+
 function EditBudget({ budgetInfo, refreshData }) {
   const [emojiIcon, setEmojiIcon] = useState(budgetInfo?.icon);
   const [openEmojiPicker, setOpenEmojiPicker] = useState(false);
   const [dueDate, setDate] = useState();
   const [name, setName] = useState();
   const [amount, setAmount] = useState();
+  const [expenses, setExpenses] = useState([]);
   const { user } = useUser();
 
   useEffect(() => {
@@ -33,8 +35,29 @@ function EditBudget({ budgetInfo, refreshData }) {
       setAmount(budgetInfo.amount);
       setName(budgetInfo.name);
       setDate(budgetInfo.dueDate);
+      fetchExpenses();
     }
+    // eslint-disable-next-line
   }, [budgetInfo]);
+
+  const fetchExpenses = async () => {
+    if (!budgetInfo?.id) return;
+    try {
+      const result = await db
+        .select({
+          id: Expenses.id,
+          name: Expenses.name,
+          amount: Expenses.amount,
+          createdAt: Expenses.createdAt,
+        })
+        .from(Expenses)
+        .where(eq(Expenses.budgetId, budgetInfo.id));
+      setExpenses(result);
+    } catch (error) {
+      console.error("Error fetching expenses for budget:", error);
+    }
+  };
+
   const onUpdateBudget = async () => {
     const result = await db
       .update(Budgets)
@@ -52,9 +75,9 @@ function EditBudget({ budgetInfo, refreshData }) {
       toast("Budget Updated!");
     }
   };
+
   return (
     <div>
-
       <div className="mt-5">
         <Button
           variant="outline"
@@ -105,6 +128,33 @@ function EditBudget({ budgetInfo, refreshData }) {
       >
         Update Budget
       </Button>
+      {/* List of expenses for this budget */}
+      <div className="mt-12 pt-10">
+        <h3 className="font-bold text-lg mb-2">Expenses for this budget: </h3>
+        {expenses.length > 0 ? (
+          <ul className="space-y-2">
+            {expenses.map((expense) => (
+              <li key={expense.id} className="border p-2 rounded">
+                <div className="flex justify-between">
+                  <span className="font-medium">{expense.name}</span>
+                  <span className="text-right">${expense.amount}</span>
+                </div>
+                <div className="text-xs text-gray-500">
+                  {expense.createdAt
+                    ? (() => {
+                      // If stored as "YYYY-MM-DD", split and reformat
+                      const [year, month, day] = expense.createdAt.split("-");
+                      return `${month}/${day}/${year}`;
+                    })()
+                    : ""}
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-500">No expenses for this budget.</p>
+        )}
+      </div>
     </div>
   );
 }

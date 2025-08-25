@@ -86,11 +86,6 @@ function ExpensesScreen({ params }) {
 
   // Apply filters to the expenses list
   const applyFilters = () => {
-    console.log("Applying Filters:");
-    console.log("Selected Category:", selectedCategory);
-    console.log("Selected Month:", selectedMonth);
-    console.log("Selected Year:", selectedYear);
-
     let filteredExpenses = expensesList;
 
     // Filter by category
@@ -98,10 +93,7 @@ function ExpensesScreen({ params }) {
       const selectedBudget = categories.find(
         (category) => category?.name?.trim().toLowerCase() === selectedCategory.trim().toLowerCase()
       );
-
       const selectedBudgetId = selectedBudget?.id;
-      console.log("Selected BudgetId:", selectedBudgetId);
-
       filteredExpenses = filteredExpenses.filter(
         (expense) => expense.budgetId === selectedBudgetId
       );
@@ -111,14 +103,13 @@ function ExpensesScreen({ params }) {
     if (selectedMonth && selectedYear) {
       filteredExpenses = filteredExpenses.filter((expense) => {
         if (!expense.createdAt) return false;
-        const expenseDate = new Date(expense.createdAt);
-        const expenseMonth = String(expenseDate.getMonth() + 1).padStart(2, "0");
-        const expenseYear = expenseDate.getFullYear().toString();
-        return expenseMonth === selectedMonth && expenseYear === selectedYear;
+        // createdAt is a string "YYYY-MM-DD"
+        const [year, month] = expense.createdAt.split("-");
+        // month is "08" for August, year is "2025"
+        return month === selectedMonth && year === selectedYear;
       });
     }
 
-    console.log("Filtered Expenses:", filteredExpenses);
     setFilteredExpensesList(filteredExpenses);
   };
 
@@ -177,11 +168,14 @@ function ExpensesScreen({ params }) {
           className="p-2 border rounded-md w-full"
         >
           <option value="">All Categories</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.name}>
-              {category.name}
-            </option>
-          ))}
+          {categories
+            .slice() // create a copy to avoid mutating state
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map((category) => (
+              <option key={category.id} value={category.name}>
+                {category.name}
+              </option>
+            ))}
         </select>
       </div>
 
