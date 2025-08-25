@@ -10,158 +10,129 @@ import CreateExpense from "../expenses/_components/CreateExpense";
 
 function ExpensesScreen({ params }) {
   const [expensesList, setExpensesList] = useState([]);
-  const [categories, setCategories] = useState([]); // To store available budget categories
+  const [categories, setCategories] = useState([]); // Available budget categories
   const [filteredExpensesList, setFilteredExpensesList] = useState([]);
-  const [budgetInfo, setbudgetInfo] = useState();
-  const [selectedCategory, setSelectedCategory] = useState(""); // State for selected category filter
-  const { user } = useUser();
-
+  const [selectedCategory, setSelectedCategory] = useState(""); // Selected category filter
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
-  const [loading, setLoading] = useState(false); // Default to false to avoid unnecessary "Loading..." message
+  const [loading, setLoading] = useState(false); // Loading state
+  const { user } = useUser();
 
   // Set default month and year to the current month and year
   useEffect(() => {
     const currentDate = new Date();
-    const currentMonth = String(currentDate.getMonth() + 1).padStart(2, "0"); // MM format
-    const currentYear = currentDate.getFullYear(); // YYYY format
-
-    setSelectedMonth(currentMonth);
-    setSelectedYear(currentYear);
+    setSelectedMonth(String(currentDate.getMonth() + 1).padStart(2, "0")); // MM format
+    setSelectedYear(currentDate.getFullYear().toString()); // YYYY format
   }, []);
+
+  // Fetch data when the component mounts or user changes
+  useEffect(() => {
+    if (user) {
+      fetchBudgetCategories();
+      fetchAllExpenses();
+    }
+  }, [user]);
 
   // Apply filters whenever the expenses list, selected month, year, or category changes
   useEffect(() => {
     if (expensesList.length > 0) {
-      applyFilters(); // Apply both date and category filters
+      applyFilters();
     }
   }, [expensesList, selectedMonth, selectedYear, selectedCategory]);
 
-  // Apply date and category filters to expenses
-  const applyFilters = () => {
-    let filteredExpenses = [];
-    if (selectedCategory) {
-      // Find the budgetId for the selected Budgets.name from categories (which should be Budgets)
-      const selectedBudgetObj = budgetInfo && budgetInfo.name && budgetInfo.id
-        ? { name: budgetInfo.name, id: budgetInfo.id }
-        : null;
-      // If categories is an array of budget objects, find by name
-      // Otherwise, fallback to searching in expensesList
-      let selectedBudgetId = null;
-      if (Array.isArray(categories) && categories.length && typeof categories[0] === 'object' && categories[0].name && categories[0].id) {
-        selectedBudgetId = categories.find(
-          (cat) => cat.name && cat.name.trim().toLowerCase() === selectedCategory.trim().toLowerCase()
-        )?.id;
-      } else if (selectedBudgetObj && selectedBudgetObj.name.trim().toLowerCase() === selectedCategory.trim().toLowerCase()) {
-        selectedBudgetId = selectedBudgetObj.id;
-      } else {
-        selectedBudgetId = expensesList.find(
-          (expense) => expense.budgetName && expense.budgetName.trim().toLowerCase() === selectedCategory.trim().toLowerCase()
-        )?.budgetId;
-      }
-      console.log('Selected Category:', selectedCategory);
-      console.log('Selected BudgetId:', selectedBudgetId);
-      console.log('All Expenses:', expensesList);
-      filteredExpenses = expensesList.filter((expense) => {
-        if (!expense.budgetId) return false;
-        const matchesCategory = expense.budgetId === selectedBudgetId;
-        if (!matchesCategory) return false;
-        if (selectedMonth && selectedYear) {
-          if (!expense.createdAt) return false;
-          const expenseDate = new Date(expense.createdAt);
-          const expenseMonth = String(expenseDate.getMonth() + 1).padStart(2, "0");
-          const expenseYear = expenseDate.getFullYear();
-          return expenseMonth === selectedMonth && expenseYear === parseInt(selectedYear, 10);
-        }
-        return true;
-      });
-      console.log('Filtered Expenses:', filteredExpenses);
-    } else if (selectedMonth && selectedYear) {
-      // Filter by month/year if no category selected
-      filteredExpenses = expensesList.filter((expense) => {
-        if (!expense.createdAt) return false;
-        const expenseDate = new Date(expense.createdAt);
-        const expenseMonth = String(expenseDate.getMonth() + 1).padStart(2, "0");
-        const expenseYear = expenseDate.getFullYear();
-        return expenseMonth === selectedMonth && expenseYear === parseInt(selectedYear, 10);
-      });
-      console.log('Filtered Expenses by Month/Year:', filteredExpenses);
-    } else {
-      // If nothing selected, show nothing
-      filteredExpenses = [];
-      console.log('No selection, showing nothing.');
-    }
-    setFilteredExpensesList(filteredExpenses);
-  };
-
-  useEffect(() => {
-    user && getBudgetInfo();
-    user && getAllExpenses();
-  }, [user]);
-
-  // Get Budget Information (including categories)
-  const getBudgetInfo = async () => {
-    setLoading(true); // Set loading to true while fetching data
-
+  // Fetch budget categories
+  const fetchBudgetCategories = async () => {
+    setLoading(true);
     try {
       const result = await db
-        .select({
-          id: Budgets.id,
-          name: Budgets.name,
-          totalSpend: sql`sum(${Expenses.amount})`.mapWith(Number),
-          totalItem: sql`count(${Expenses.id})`.mapWith(Number),
-        })
-        .from(Budgets)
-        .leftJoin(Expenses, eq(Budgets.id, Expenses.budgetId))
-        .where(eq(Budgets.createdBy, user?.primaryEmailAddress?.emailAddress))
-        .where(eq(Budgets.id, params.id))
-        .groupBy(Budgets.id);
-
-      setbudgetInfo(result[0]);
-      setLoading(false); // Set loading to false once data is fetched
-
-      // Fetch categories (budget names)
-      const categoriesResult = await db
-        .select({ name: Budgets.name })
+        .select({ id: Budgets.id, name: Budgets.name })
         .from(Budgets)
         .where(eq(Budgets.createdBy, user?.primaryEmailAddress?.emailAddress));
 
-  setCategories(categoriesResult.map((budget) => budget.name).sort((a, b) => a.localeCompare(b))); // Set categories alphabetically
+      setCategories(result); // Ensure categories contain both id and name
+      console.log("Fetched Categories:", result);
     } catch (error) {
-      console.error("Error fetching expense:", error);
-      setLoading(false); // Set loading to false in case of error
+      console.error("Error fetching budget categories:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Get All Expenses
-  const getAllExpenses = async () => {
-    const result = await db.select({
-      id: Expenses.id,
-      name: Expenses.name,
-      amount: Expenses.amount,
-      budgetId: Expenses.budgetId,
-      createdAt: Expenses.createdAt,
-    }).from(Expenses)
-      .leftJoin(Budgets, eq(Budgets.id, Expenses.budgetId))
-      .where(eq(Budgets.createdBy, user?.primaryEmailAddress?.emailAddress))
-      .orderBy(desc(Expenses.createdAt));
+  // Fetch all expenses
+  const fetchAllExpenses = async () => {
+    setLoading(true);
+    try {
+      const result = await db
+        .select({
+          id: Expenses.id,
+          name: Expenses.name,
+          amount: Expenses.amount,
+          budgetId: Expenses.budgetId,
+          createdAt: Expenses.createdAt,
+        })
+        .from(Expenses)
+        .leftJoin(Budgets, eq(Budgets.id, Expenses.budgetId))
+        .where(eq(Budgets.createdBy, user?.primaryEmailAddress?.emailAddress))
+        .orderBy(desc(Expenses.createdAt));
 
-    // Only include expenses that have a valid budgetName and budgetId
-    setExpensesList(result.filter(exp => exp.budgetName && exp.budgetId));
+      setExpensesList(result);
+      console.log("Fetched Expenses:", result);
+    } catch (error) {
+      console.error("Error fetching expenses:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Apply filters to the expenses list
+  const applyFilters = () => {
+    console.log("Applying Filters:");
+    console.log("Selected Category:", selectedCategory);
+    console.log("Selected Month:", selectedMonth);
+    console.log("Selected Year:", selectedYear);
+
+    let filteredExpenses = expensesList;
+
+    // Filter by category
+    if (selectedCategory) {
+      const selectedBudget = categories.find(
+        (category) => category?.name?.trim().toLowerCase() === selectedCategory.trim().toLowerCase()
+      );
+
+      const selectedBudgetId = selectedBudget?.id;
+      console.log("Selected BudgetId:", selectedBudgetId);
+
+      filteredExpenses = filteredExpenses.filter(
+        (expense) => expense.budgetId === selectedBudgetId
+      );
+    }
+
+    // Filter by month and year
+    if (selectedMonth && selectedYear) {
+      filteredExpenses = filteredExpenses.filter((expense) => {
+        if (!expense.createdAt) return false;
+        const expenseDate = new Date(expense.createdAt);
+        const expenseMonth = String(expenseDate.getMonth() + 1).padStart(2, "0");
+        const expenseYear = expenseDate.getFullYear().toString();
+        return expenseMonth === selectedMonth && expenseYear === selectedYear;
+      });
+    }
+
+    console.log("Filtered Expenses:", filteredExpenses);
+    setFilteredExpensesList(filteredExpenses);
   };
 
   return (
-    <div className='p-10 pb-28'>
-      <div className='flex'>
-        <h2 className='font-bold text-3xl'>My Expenses</h2>
+    <div className="p-10 pb-28">
+      <div className="flex">
+        <h2 className="font-bold text-3xl">My Expenses</h2>
       </div>
 
-      <div className='grid grid-cols-1
-        md:grid-cols-2 lg:grid-cols-3 gap-5 mt-7'>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-7">
         <CreateExpense
           budgetId={params.id}
           user={user}
-          refreshData={() => getAllExpenses()}
+          refreshData={() => fetchAllExpenses()}
         />
       </div>
 
@@ -190,7 +161,7 @@ function ExpensesScreen({ params }) {
           >
             <option value="">Select Year</option>
             {Array.from({ length: 5 }, (_, i) => {
-              const year = new Date().getFullYear() + 1 - i;
+              const year = new Date().getFullYear() - i;
               return <option key={year} value={year}>{year}</option>;
             })}
           </select>
@@ -206,9 +177,9 @@ function ExpensesScreen({ params }) {
           className="p-2 border rounded-md w-full"
         >
           <option value="">All Categories</option>
-          {categories.map((category, index) => (
-            <option key={index} value={category}>
-              {category}
+          {categories.map((category) => (
+            <option key={category.id} value={category.name}>
+              {category.name}
             </option>
           ))}
         </select>
@@ -220,9 +191,9 @@ function ExpensesScreen({ params }) {
       {/* Display Expenses List */}
       <div>
         {filteredExpensesList?.length > 0 ? (
-          <ExpenseList refreshData={() => getAllExpenses()} expensesList={filteredExpensesList} />
+          <ExpenseList refreshData={() => fetchAllExpenses()} expensesList={filteredExpensesList} />
         ) : (
-          !loading && <p className="text-gray-500">No expenses found for the selected date range and category.</p>
+          !loading && <p className="text-gray-500">No expenses found for the selected filters.</p>
         )}
       </div>
     </div>
